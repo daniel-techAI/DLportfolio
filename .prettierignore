@@ -1,0 +1,14 @@
+.next/
+node_modules/
+out/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+package-lock.json
+next-env.d.ts
+public/images/**/*.jpg
+public/images/**/*.jpeg
+public/images/**/*.png
+public/images/**/*.webp
+public/documents/**/*.pdf

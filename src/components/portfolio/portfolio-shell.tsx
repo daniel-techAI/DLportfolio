@@ -429,7 +429,12 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
         <div aria-hidden={listView ? "true" : undefined} {...(listView ? { inert: true } : {})}>
           <ClientErrorBoundary
             fallback={
-              <AccessiblePortfolio graph={graph} hidden={false} onActivate={activateNode} />
+              <AccessiblePortfolio
+                graph={graph}
+                hidden={false}
+                onActivate={activateNode}
+                onAction={trackAction}
+              />
             }
           >
             <PortfolioCanvas
@@ -441,11 +446,17 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
               basePath={basePath}
               profileAvailable={profileAvailable}
               onActivate={activateNode}
+              onAction={trackAction}
             />
           </ClientErrorBoundary>
         </div>
 
-        <AccessiblePortfolio graph={graph} hidden={!listView} onActivate={activateNode} />
+        <AccessiblePortfolio
+          graph={graph}
+          hidden={!listView}
+          onActivate={activateNode}
+          onAction={trackAction}
+        />
 
         <div className="canvas-footer" aria-hidden={listView}>
           <p className="canvas-caption">

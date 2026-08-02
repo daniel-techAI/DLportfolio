@@ -63,6 +63,17 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   await page.goto("./");
   await expectRootGraph(page);
 
+  const linkedinBadge = page.getByTestId("linkedin-profile-badge");
+  await expect(linkedinBadge).toBeVisible();
+  await expect(linkedinBadge).toHaveAttribute(
+    "href",
+    "https://www.linkedin.com/in/daniel-laky-141a9b350/",
+  );
+  await expect(linkedinBadge).toHaveAttribute("target", "_blank");
+  await expect(linkedinBadge).toHaveAttribute("rel", /noopener/);
+  await linkedinBadge.focus();
+  await expect(linkedinBadge).toBeFocused();
+
   await openGraphNode(page, "root-projects", /projects/i, "projects");
   await expect(page.getByText("Selected Projects", { exact: true }).first()).toBeVisible();
 
@@ -87,6 +98,36 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   const cvControl = await findCvControl(page);
   await expect(cvControl).toBeVisible();
   await expect(cvControl).toHaveAccessibleName(/cv/i);
+  await expect(cvControl).toHaveAttribute("download", "Daniel_Laky_Remote_Roles_CV.pdf");
+  await expect(cvControl).toHaveAttribute("href", /documents\/Daniel_Laky_Remote_Roles_CV\.pdf$/);
+
+  const emailNode = await graphNode(page, "contact-email", /email/i);
+  await emailNode.click();
+  const emailDialog = page.getByRole("dialog", { name: /email daniel/i });
+  await expect(emailDialog).toBeVisible();
+  await expect(emailDialog.getByRole("link", { name: /job opportunity/i })).toHaveAttribute(
+    "href",
+    "mailto:Daniellaky.uni@gmail.com?subject=Remote%20opportunity%20for%20Daniel%20Laky",
+  );
+  await expect(
+    emailDialog.getByRole("link", { name: /freelance work or a project enquiry/i }),
+  ).toHaveAttribute(
+    "href",
+    "mailto:r.creation.st@gmail.com?subject=Project%20enquiry%20for%20Daniel%20Laky",
+  );
+  await page.keyboard.press("Escape");
+
+  const contactCenter = await graphNode(page, "contact-center", /contact daniel/i);
+  await contactCenter.click();
+  const contactDialog = page.getByRole("dialog", { name: /contact daniel/i });
+  await expect(contactDialog.getByRole("link", { name: /call daniel/i })).toHaveAttribute(
+    "href",
+    "tel:+421949093583",
+  );
+
+  const cvResponse = await page.request.get("./documents/Daniel_Laky_Remote_Roles_CV.pdf");
+  expect(cvResponse.status()).toBe(200);
+  expect((await cvResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
 });
 
 test("supports keyboard entry, direct URLs, invalid-path recovery, and critical a11y", async ({
@@ -135,6 +176,7 @@ test("supports keyboard entry, direct URLs, invalid-path recovery, and critical 
   await page.locator('[data-testid="list-view-toggle"]:visible').click();
   const accessibleList = page.locator("#portfolio-list");
   await expect(accessibleList).toBeVisible();
+  await expect(page.getByTestId("linkedin-profile-badge-list")).toBeVisible();
   const projectsCard = accessibleList.locator("details").filter({ hasText: "Projects" }).first();
   await projectsCard.locator("summary").click();
   await projectsCard.getByRole("button", { name: "Open map" }).click();

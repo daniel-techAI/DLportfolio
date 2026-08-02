@@ -252,6 +252,7 @@ export function DetailPanel({ node, basePath, cvAvailable, onClose, onAction }: 
                       target={action.external ? "_blank" : undefined}
                       rel={action.external ? "noopener noreferrer" : undefined}
                       download={action.download}
+                      aria-label={action.ariaLabel}
                       onClick={() => onAction(action)}
                       key={action.id}
                     >

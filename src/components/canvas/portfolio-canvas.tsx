@@ -14,7 +14,11 @@ import { motion } from "motion/react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { portfolioData } from "@/data/portfolio";
 import { applyGraphLayout } from "@/lib/graph-layout";
-import type { GraphDefinition, PortfolioNode as PortfolioNodeModel } from "@/types/portfolio";
+import type {
+  GraphDefinition,
+  PortfolioAction,
+  PortfolioNode as PortfolioNodeModel,
+} from "@/types/portfolio";
 import {
   PortfolioNode,
   type PortfolioFlowNode,
@@ -36,12 +40,13 @@ type PortfolioCanvasProps = {
   basePath: string;
   profileAvailable: boolean;
   onActivate: (node: PortfolioNodeModel, origin: HTMLButtonElement) => void;
+  onAction: (action: PortfolioAction) => void;
 };
 
 const nodeTypes = { portfolio: PortfolioNode };
 
 function dimensionsFor(node: PortfolioNodeModel, isCenter: boolean) {
-  if (node.kind === "profile") return { width: 336, height: 320 };
+  if (node.kind === "profile") return { width: 336, height: 368 };
   if (isCenter) return { width: 288, height: 192 };
   if (node.kind === "timeline") return { width: 272, height: 152 };
   if (node.kind === "project" || node.kind.includes("credential")) {
@@ -68,7 +73,16 @@ function connectionPositions(x: number, y: number, isCenter: boolean) {
 
 const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasProps>(
   function PortfolioCanvasInner(
-    { graph, selectedNodeId, transitioning, reducedMotion, basePath, profileAvailable, onActivate },
+    {
+      graph,
+      selectedNodeId,
+      transitioning,
+      reducedMotion,
+      basePath,
+      profileAvailable,
+      onActivate,
+      onAction,
+    },
     ref,
   ) {
     const reactFlow = useReactFlow<PortfolioFlowNode, Edge>();
@@ -115,6 +129,7 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
           basePath,
           profileAvailable,
           onActivate,
+          onAction,
         };
 
         return {
@@ -132,7 +147,7 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
           style: { animationDelay: `${Math.min(index * 32, 220)}ms` },
         } satisfies PortfolioFlowNode;
       });
-    }, [basePath, graph, onActivate, profileAvailable, selectedNodeId, viewport]);
+    }, [basePath, graph, onAction, onActivate, profileAvailable, selectedNodeId, viewport]);
 
     const edges = useMemo<Edge[]>(
       () =>

@@ -5,7 +5,8 @@ import { ArrowDownToLine, ArrowUpRight, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, type MouseEvent } from "react";
 import { portfolioData } from "@/data/portfolio";
-import type { PortfolioNode as PortfolioNodeModel } from "@/types/portfolio";
+import type { PortfolioAction, PortfolioNode as PortfolioNodeModel } from "@/types/portfolio";
+import { LinkedInProfileBadge } from "@/components/shared/linkedin-profile-badge";
 import { PortfolioIconGlyph } from "@/components/shared/icon-map";
 
 export type PortfolioFlowNodeData = {
@@ -17,6 +18,7 @@ export type PortfolioFlowNodeData = {
   basePath: string;
   profileAvailable: boolean;
   onActivate: (node: PortfolioNodeModel, origin: HTMLButtonElement) => void;
+  onAction: (action: PortfolioAction) => void;
 };
 
 export type PortfolioFlowNode = Node<PortfolioFlowNodeData, "portfolio">;
@@ -37,8 +39,17 @@ export function PortfolioNode({
   sourcePosition = Position.Bottom,
   targetPosition = Position.Top,
 }: NodeProps<PortfolioFlowNode>) {
-  const { item, isCenter, isActive, isDimmed, childCount, basePath, profileAvailable, onActivate } =
-    data;
+  const {
+    item,
+    isCenter,
+    isActive,
+    isDimmed,
+    childCount,
+    basePath,
+    profileAvailable,
+    onActivate,
+    onAction,
+  } = data;
   const [portraitFailed, setPortraitFailed] = useState(false);
   const isProfile = item.kind === "profile";
   const isAction = Boolean(item.action);
@@ -157,6 +168,13 @@ export function PortfolioNode({
           </span>
         </span>
       </motion.button>
+      {isProfile && isCenter ? (
+        <LinkedInProfileBadge
+          action={portfolioData.actions.linkedin}
+          identity={portfolioData.identity}
+          onAction={onAction}
+        />
+      ) : null}
       <Handle
         type="source"
         position={sourcePosition}

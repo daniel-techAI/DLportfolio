@@ -15,6 +15,9 @@ export default function Home() {
   const cvAvailable = publicAssetExists(portfolioData.actions.cv.href);
   const profileAvailable = publicAssetExists(portfolioData.identity.profileImage.src);
   const linkedin = portfolioData.actions.linkedin.href;
+  const recruitmentEmail = portfolioData.actions.email;
+  const projectEmail = portfolioData.actions.businessEmail;
+  const phone = portfolioData.actions.phone;
   const github =
     "href" in portfolioData.actions.github ? portfolioData.actions.github.href : undefined;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com").replace(/\/$/, "");
@@ -31,12 +34,29 @@ export default function Home() {
         }
       : {}),
     description: portfolioData.identity.descriptor,
+    email: recruitmentEmail.value,
+    telephone: phone.href.replace(/^tel:/, ""),
     address: {
       "@type": "PostalAddress",
       addressLocality: "Senec",
       addressCountry: "SK",
     },
     sameAs: [linkedin, github].filter(Boolean),
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "recruitment",
+        email: recruitmentEmail.value,
+        telephone: phone.href.replace(/^tel:/, ""),
+        availableLanguage: ["Slovak", "Czech", "English"],
+      },
+      {
+        "@type": "ContactPoint",
+        contactType: "project enquiries",
+        email: projectEmail.value,
+        availableLanguage: ["Slovak", "Czech", "English"],
+      },
+    ],
     knowsAbout: [
       "Customer support",
       "Operations",
@@ -65,6 +85,15 @@ export default function Home() {
           <p>
             {portfolioData.identity.location}. {portfolioData.identity.status}.
           </p>
+          <address>
+            <a href={recruitmentEmail.href}>{recruitmentEmail.value}</a>
+            {" · "}
+            <a href={projectEmail.href}>{projectEmail.value}</a>
+            {" · "}
+            <a href={phone.href}>{phone.value}</a>
+            {" · "}
+            <a href={linkedin}>LinkedIn profile</a>
+          </address>
           {Object.values(portfolioData.graphs)
             .filter((graph) => graph.id !== portfolioData.rootGraphId)
             .map((graph) => (

@@ -440,7 +440,11 @@ summary:focus-visible,
 
 .graph-node--profile {
   width: 21rem;
-  min-height: 20rem;
+  min-height: 23rem;
+}
+
+.graph-node--profile .graph-node__button {
+  padding-bottom: 6.25rem;
 }
 
 .graph-node--project {
@@ -611,6 +615,103 @@ summary:focus-visible,
   font-family: var(--font-newsreader), Georgia, serif;
   font-size: 2.3rem;
   letter-spacing: -0.08em;
+}
+
+.linkedin-profile-badge {
+  display: grid;
+  width: min(100%, 21rem);
+  min-height: 4.5rem;
+  grid-template-columns: 2.35rem minmax(0, 1fr) 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgb(197 154 103 / 28%);
+  border-radius: 1rem;
+  background: rgb(14 15 15 / 92%);
+  color: var(--color-text);
+  padding: 0.65rem 0.75rem;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 28%);
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.graph-node--profile > .linkedin-profile-badge {
+  position: absolute;
+  z-index: 3;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  width: auto;
+}
+
+.linkedin-profile-badge:hover {
+  border-color: rgb(197 154 103 / 62%);
+  background: rgb(29 31 29 / 98%);
+  transform: translateY(-1px);
+}
+
+.linkedin-profile-badge:focus-visible {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 3px;
+}
+
+.linkedin-profile-badge__monogram {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: var(--color-accent-strong);
+  color: var(--color-canvas);
+  font-family: Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+}
+
+.linkedin-profile-badge__copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.08rem;
+}
+
+.linkedin-profile-badge__copy strong {
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkedin-profile-badge__copy > span:last-child:not(.linkedin-profile-badge__network) {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.linkedin-profile-badge__network {
+  color: var(--color-accent-strong);
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 720;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.linkedin-profile-badge__arrow {
+  color: var(--color-accent-strong);
+}
+
+.linkedin-profile-badge--compact {
+  min-height: 3.75rem;
+  grid-template-columns: 2.2rem minmax(0, 1fr) 1rem;
 }
 
 .canvas-footer {
@@ -873,6 +974,11 @@ summary:focus-visible,
   line-height: 1.65;
 }
 
+.list-view__intro .linkedin-profile-badge {
+  margin: 1rem auto 0;
+  text-align: left;
+}
+
 .list-view__title {
   margin: 0;
   font-family: var(--font-newsreader), Georgia, serif;
@@ -1052,7 +1158,13 @@ summary:focus-visible,
 
   .graph-node--profile {
     width: 17.5rem;
-    min-height: 18.5rem;
+    min-height: 22rem;
+  }
+
+  .graph-node--profile > .linkedin-profile-badge {
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
   }
 
   .graph-node--project,

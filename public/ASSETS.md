@@ -1,14 +1,14 @@
 # Portfolio asset drop zones
 
-These folders are intentionally committed without fake image or PDF files. The application renders
-designed fallbacks whenever an asset is absent, so a missing file never becomes a broken-image icon.
+These folders never use fake image or PDF files. The application renders designed fallbacks whenever
+an optional asset is absent, so a missing file never becomes a broken-image icon.
 
 ## Required personal files
 
 - Add Daniel's profile photo as `images/profile/daniel-laky.jpg`. Use a square, high-quality JPEG;
   1,200 × 1,200 px is a practical source size.
-- Add the final CV as `documents/Daniel_Laky_Remote_Roles_CV.pdf`. Keep that exact filename so the
-  download control can find it.
+- The reviewed CV is stored as `documents/Daniel_Laky_Remote_Roles_CV.pdf`. Keep that exact filename
+  when replacing it so the download control continues to work.
 
 ## Optional project and credential files
 

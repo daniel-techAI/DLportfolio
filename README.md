@@ -12,13 +12,13 @@ contact-form backend, cookies, or third-party analytics by default.
 
 ## Current content status
 
-The supplied professional content is implemented, while personal and proof assets that were not
-provided remain deliberately unavailable:
+The supplied professional content and confirmed contact details are implemented. Assets that have
+not been supplied remain deliberately unavailable:
 
-- Email and phone number use labelled placeholders. Daniel's GitHub profile and the public
-  Klinepilot app are configured; Klinepilot's private source-repository URL is not exposed.
+- Recruitment email, project-enquiry email, phone, LinkedIn, GitHub and the public Klinepilot app are
+  configured; Klinepilot's private source-repository URL is not exposed.
 - The profile photograph has a designed fallback until the real JPEG is added.
-- The CV action remains unavailable until the real PDF is added.
+- The reviewed one-page remote-roles CV is available as a direct PDF download.
 - Project galleries use labelled placeholders.
 - Every initial credential is marked `planned`; none is presented as earned.
 
@@ -122,10 +122,9 @@ typed nodes, graph definitions, credentials, details, actions, and image records
 
 ### Contact details
 
-In `portfolioActions` inside `src/data/portfolio.ts`, replace `[EMAIL]` and `[PHONE]`. Add the
-matching `href` (`mailto:` or `tel:`), change `availability` from
-`placeholder` to `available`, and retain the relevant analytics event. Keep external destinations on
-HTTPS and review the accessible label.
+Recruitment, project-enquiry and phone actions are defined once in `portfolioActions` inside
+`src/data/portfolio.ts`. Update both the visible `value` and matching `mailto:` or `tel:` target,
+retain the relevant analytics event, and review the accessible label whenever a contact changes.
 
 ### Profile photo
 
@@ -351,16 +350,13 @@ or critical automated accessibility violations. It also exercises the narrow-scr
 checks that the document does not overflow horizontally. The CI workflow repeats these checks on
 pushes to `main` and pull requests.
 
-As of 30 July 2026, `npm audit --omit=dev` reports three high-severity advisories inherited through
-the current stable Next.js package's build-time PostCSS and Sharp dependencies. npm offers no
-compatible fixed Next.js release and suggests an unsafe framework downgrade. This site is statically
-exported, accepts no untrusted build input, and runs no Next.js server in production, which narrows
-exposure; monitor upstream releases and upgrade as soon as a compatible fix is published.
+Dependency overrides keep the statically exported build on patched PostCSS and Sharp releases.
+Dependabot and `npm audit` should remain clear before deployment; do not force incompatible framework
+downgrades in response to an automated suggestion.
 
-Before publishing real content:
+Before publishing new or revised content:
 
-- Replace all bracketed contact placeholders.
-- Add and manually open the real CV PDF.
+- Confirm every public contact target and manually open the CV PDF.
 - Review every credential status and verification link.
 - Optimise and inspect every image at mobile and desktop sizes.
 - Run Lighthouse against the production export and address practical regressions toward the stated

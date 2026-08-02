@@ -23,4 +23,34 @@ describe("central portfolio data navigation", () => {
       }
     }
   });
+
+  it("publishes distinct recruitment and project contacts from the central data source", () => {
+    expect(portfolioData.actions.email).toMatchObject({
+      value: "Daniellaky.uni@gmail.com",
+      href: "mailto:Daniellaky.uni@gmail.com?subject=Remote%20opportunity%20for%20Daniel%20Laky",
+      availability: "available",
+    });
+    expect(portfolioData.actions.businessEmail).toMatchObject({
+      value: "r.creation.st@gmail.com",
+      href: "mailto:r.creation.st@gmail.com?subject=Project%20enquiry%20for%20Daniel%20Laky",
+      availability: "available",
+    });
+    expect(portfolioData.actions.phone).toMatchObject({
+      value: "+421 949 093 583",
+      href: "tel:+421949093583",
+      availability: "available",
+    });
+    expect(portfolioData.actions.linkedin.href).toBe(
+      "https://www.linkedin.com/in/daniel-laky-141a9b350/",
+    );
+
+    const emailNode = portfolioData.graphs.contact.nodes.find(
+      (node) => node.id === "contact-email",
+    );
+    expect(emailNode?.action).toBeUndefined();
+    expect(emailNode?.detail?.actions?.map((action) => action.id)).toEqual([
+      "email",
+      "business-email",
+    ]);
+  });
 });

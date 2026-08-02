@@ -1,16 +1,20 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { GraphDefinition, PortfolioNode } from "@/types/portfolio";
+import { portfolioData } from "@/data/portfolio";
+import type { GraphDefinition, PortfolioAction, PortfolioNode } from "@/types/portfolio";
+import { LinkedInProfileBadge } from "@/components/shared/linkedin-profile-badge";
 
 export function AccessiblePortfolio({
   graph,
   hidden,
   onActivate,
+  onAction,
 }: {
   graph: GraphDefinition;
   hidden: boolean;
   onActivate: (node: PortfolioNode, origin: HTMLButtonElement) => void;
+  onAction: (action: PortfolioAction) => void;
 }) {
   const center = graph.nodes.find((node) => node.id === graph.centerNodeId);
   const children = graph.nodes.filter((node) => node.id !== graph.centerNodeId);
@@ -26,6 +30,15 @@ export function AccessiblePortfolio({
         <p className="graph-node__eyebrow">Text portfolio · {graph.layout} map</p>
         <h2 className="list-view__title">{center?.title ?? graph.title}</h2>
         <p>{center?.descriptor ?? graph.description}</p>
+        {graph.id === portfolioData.rootGraphId ? (
+          <LinkedInProfileBadge
+            action={portfolioData.actions.linkedin}
+            identity={portfolioData.identity}
+            compact
+            testId="linkedin-profile-badge-list"
+            onAction={onAction}
+          />
+        ) : null}
       </header>
 
       <div className="list-view__content" tabIndex={hidden ? -1 : 0}>

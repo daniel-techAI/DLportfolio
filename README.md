@@ -375,4 +375,8 @@ Before publishing real content:
 - Add a consent-managed analytics provider only if its value justifies the privacy cost.
 - Revisit content and skill labels as Daniel gains evidence and experience.
 
-No license is currently declared; add one before inviting third-party redistribution or reuse.
+## License
+
+The website source code is available under the [MIT License](LICENSE). Daniel Laky's personal content,
+CV, photography, project artwork, certificate images, names, and brand assets are excluded; see the
+[content and asset notice](NOTICE.md).

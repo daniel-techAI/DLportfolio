@@ -1,0 +1,30 @@
+name: Accessibility report
+description: Report a keyboard, screen-reader, contrast, zoom, motion, or touch barrier.
+title: "[Accessibility]: "
+labels:
+  - accessibility
+body:
+  - type: textarea
+    id: barrier
+    attributes:
+      label: Barrier encountered
+      description: Explain the task you could not complete and the active portfolio path.
+    validations:
+      required: true
+  - type: input
+    id: technology
+    attributes:
+      label: Browser and assistive technology
+      placeholder: Firefox with NVDA 2026.2
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement

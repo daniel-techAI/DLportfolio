@@ -1,0 +1,9 @@
+* text=auto
+
+*.pdf -text
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.webp -text
+*.avif -text
+*.woff2 -text

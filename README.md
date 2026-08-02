@@ -15,7 +15,8 @@ contact-form backend, cookies, or third-party analytics by default.
 The supplied professional content is implemented, while personal and proof assets that were not
 provided remain deliberately unavailable:
 
-- Email, phone number, GitHub profile, and Klinepilot repository use labelled placeholders.
+- Email and phone number use labelled placeholders. Daniel's GitHub profile and the public
+  Klinepilot app are configured; Klinepilot's private source-repository URL is not exposed.
 - The profile photograph has a designed fallback until the real JPEG is added.
 - The CV action remains unavailable until the real PDF is added.
 - Project galleries use labelled placeholders.

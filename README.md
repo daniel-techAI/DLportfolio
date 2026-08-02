@@ -121,8 +121,8 @@ typed nodes, graph definitions, credentials, details, actions, and image records
 
 ### Contact details
 
-In `portfolioActions` inside `src/data/portfolio.ts`, replace `[EMAIL]`, `[PHONE]`, and
-`[GITHUB_URL]`. Add the matching `href` (`mailto:`, `tel:`, or HTTPS), change `availability` from
+In `portfolioActions` inside `src/data/portfolio.ts`, replace `[EMAIL]` and `[PHONE]`. Add the
+matching `href` (`mailto:` or `tel:`), change `availability` from
 `placeholder` to `available`, and retain the relevant analytics event. Keep external destinations on
 HTTPS and review the accessible label.
 

@@ -1,9 +1,9 @@
 * text=auto
 
-*.pdf -text
-*.png -text
-*.jpg -text
-*.jpeg -text
-*.webp -text
-*.avif -text
-*.woff2 -text
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.woff2 binary

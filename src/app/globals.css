@@ -472,6 +472,11 @@ summary:focus-visible,
   box-shadow: var(--shadow-active);
 }
 
+.graph-node[data-interactive="false"]:hover {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-node);
+}
+
 .graph-node__button {
   position: relative;
   display: flex;
@@ -491,6 +496,10 @@ summary:focus-visible,
 
 .graph-node__button:focus-visible {
   box-shadow: inset var(--focus-ring);
+}
+
+.graph-node__button:disabled {
+  cursor: default;
 }
 
 .graph-node__topline,

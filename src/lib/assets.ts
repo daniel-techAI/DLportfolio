@@ -3,6 +3,7 @@ import { withBasePath } from "@/lib/url-state";
 export const EXPECTED_ASSETS = {
   profileImage: "/images/profile/daniel-laky.jpg",
   cv: "/documents/Daniel_Laky_Remote_Roles_CV.pdf",
+  cvSlovak: "/documents/Daniel_Laky_CV_Slovak.pdf",
 } as const;
 
 export function getPublicAssetUrl(

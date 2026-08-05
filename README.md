@@ -3,7 +3,7 @@
 **Live site:** [daniel-techai.github.io/DLportfolio](https://daniel-techai.github.io/DLportfolio/)
 
 An immersive, accessible portfolio for Daniel Laky, presented as a hierarchical professional mind
-map rather than a scrolling résumé. Visitors can pan and zoom the canvas, enter nested graphs,
+map rather than a scrolling résumé. Visitors can pan the automatically fitted canvas, enter nested graphs,
 follow browser history and breadcrumbs, inspect details, switch to a semantic list, and reach
 Daniel's professional contact actions.
 
@@ -18,7 +18,7 @@ not been supplied remain deliberately unavailable:
 - Recruitment email, project-enquiry email, phone, LinkedIn, GitHub and the public Klinepilot app are
   configured; Klinepilot's private source-repository URL is not exposed.
 - The profile photograph has a designed fallback until the real JPEG is added.
-- The reviewed one-page remote-roles CV is available as a direct PDF download.
+- Reviewed English and Slovak CVs are available as direct PDF downloads.
 - Project galleries use labelled placeholders.
 - Every initial credential is marked `planned`; none is presented as earned.
 
@@ -31,7 +31,7 @@ and capture sizes are documented in [`docs/screenshots/README.md`](docs/screensh
 
 - Reusable radial and timeline graph layouts powered by React Flow.
 - Recursive graph navigation with `?path=` URLs, history, breadcrumbs, Home, and Escape.
-- Mouse, trackpad, keyboard, and touch interaction, including wheel and pinch zoom.
+- Mouse, trackpad, keyboard, and touch navigation with automatic fit-to-view at every graph level.
 - Continuous Motion transitions with a reduced-motion alternative.
 - Accessible detail panels with focus management and a shared-data semantic list view.
 - Static metadata, Open Graph/Twitter metadata, robots, sitemap, and Person structured data.
@@ -140,12 +140,17 @@ icon.
 
 ### CV
 
-1. Export the reviewed CV as a real PDF.
-2. Save it at `public/documents/Daniel_Laky_Remote_Roles_CV.pdf` with that exact casing.
-3. Keep the central action set to `asset-dependent`; the server page checks for the file during the
+The bilingual source and approved one-page layout live in `scripts/build_cvs.py`. It requires Python
+3 and ReportLab; run `python -m pip install reportlab` once, then `python scripts/build_cvs.py` to
+regenerate both files. Visually review both pages after every content change.
+
+1. Keep the English and Slovak content in the generator aligned with verified portfolio data.
+2. Preserve the generated filenames `public/documents/Daniel_Laky_Remote_Roles_CV.pdf` and
+   `public/documents/Daniel_Laky_CV_Slovak.pdf`, including exact casing.
+3. Keep both central actions set to `asset-dependent`; the server page checks each file during the
    build.
-4. Run `npm run build`, then confirm the automatically enabled control downloads rather than
-   navigates to the document.
+4. Run `npm run build`, then confirm both automatically enabled controls download their respective
+   documents rather than navigating to them.
 
 Do not commit a renamed Word document or empty file with a `.pdf` extension. The asset directories
 and format guidance are also documented in `public/ASSETS.md`.
@@ -194,7 +199,9 @@ Credential records support:
 
 Only change `status` to `earned` after the credential is actually awarded. Add the verification URL
 and certificate image at the same time. Use `in progress` for active study and `planned` for intended
-learning; the UI distinguishes all three with text and icons as well as colour.
+learning; the UI distinguishes all three with text and icons as well as colour. Planned and
+in-progress credential cards remain visible but static: they cannot open details, images, or
+verification actions until the credential is earned.
 
 ### Edit graph structure
 
@@ -220,8 +227,8 @@ inherit the type system.
 ## Accessibility
 
 The graph is enhanced interaction, not the only route to the content. The same central data renders
-as semantic, expandable HTML in list view for small screens, screen readers, users who prefer linear
-navigation, and search engines.
+as semantic HTML in list view for small screens, screen readers, users who prefer linear navigation,
+and search engines. Unfinished credentials render as static articles rather than expandable cards.
 
 Keyboard controls:
 
@@ -230,8 +237,10 @@ Keyboard controls:
 | `Tab` / `Shift+Tab` | Move between controls and nodes                          |
 | `Enter` or `Space`  | Open the focused node                                    |
 | `Escape`            | Close a detail panel, otherwise move to the parent graph |
-| `+` / `-`           | Zoom the map in or out                                   |
 | `Home`              | Return to the root graph                                 |
+
+The map fits each level automatically. Manual wheel, pinch, double-click, button, and keyboard zoom
+are intentionally disabled; pointer and touch panning remain available when needed.
 
 The interface includes visible focus indicators, non-colour status labels, reduced-motion support,
 large touch targets, focus restoration after dialogs, and a keyboard-help dialog. Keep alternative
@@ -345,10 +354,10 @@ npm run quality
 ```
 
 The Playwright smoke suite verifies the root graph, Projects and Growthstack navigation, browser Back,
-Escape to root, CV control, sequential keyboard entry, direct URLs, invalid-path recovery, and serious
-or critical automated accessibility violations. It also exercises the narrow-screen list view and
-checks that the document does not overflow horizontally. The CI workflow repeats these checks on
-pushes to `main` and pull requests.
+Escape to root, both CV controls, sequential keyboard entry, direct URLs, invalid-path recovery,
+inactive planned credentials, disabled manual zoom, and serious or critical automated accessibility
+violations. It also exercises the narrow-screen list view and checks that the document does not
+overflow horizontally. The CI workflow repeats these checks on pushes to `main` and pull requests.
 
 Dependency overrides keep the statically exported build on patched PostCSS and Sharp releases.
 Dependabot and `npm audit` should remain clear before deployment; do not force incompatible framework
@@ -356,7 +365,7 @@ downgrades in response to an automated suggestion.
 
 Before publishing new or revised content:
 
-- Confirm every public contact target and manually open the CV PDF.
+- Confirm every public contact target and manually open both CV PDFs.
 - Review every credential status and verification link.
 - Optimise and inspect every image at mobile and desktop sizes.
 - Run Lighthouse against the production export and address practical regressions toward the stated

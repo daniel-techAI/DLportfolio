@@ -1,20 +1,21 @@
 "use client";
 
-import { ArrowLeft, CircleHelp, Download, Home, ListTree, Map, Minus, Plus } from "lucide-react";
+import { ArrowLeft, CircleHelp, Download, Home, ListTree, Map } from "lucide-react";
 
 type CanvasControlsProps = {
   canGoBack: boolean;
   listView: boolean;
   cvAvailable: boolean;
+  cvSlovakAvailable: boolean;
   basePath: string;
   cvHref: string;
+  cvSlovakHref: string;
   onBack: () => void;
   onHome: () => void;
   onToggleList: () => void;
   onHelp: () => void;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
   onCv: () => void;
+  onCvSlovak: () => void;
 };
 
 function IconButton({
@@ -37,15 +38,16 @@ export function CanvasControls(props: CanvasControlsProps) {
     canGoBack,
     listView,
     cvAvailable,
+    cvSlovakAvailable,
     basePath,
     cvHref,
+    cvSlovakHref,
     onBack,
     onHome,
     onToggleList,
     onHelp,
-    onZoomIn,
-    onZoomOut,
     onCv,
+    onCvSlovak,
   } = props;
 
   return (
@@ -58,12 +60,6 @@ export function CanvasControls(props: CanvasControlsProps) {
           <Home size={17} aria-hidden="true" />
         </IconButton>
         <span className="mx-0.5 h-5 w-px bg-[var(--color-border)]" aria-hidden="true" />
-        <IconButton label="Zoom in" onClick={onZoomIn} disabled={listView}>
-          <Plus size={17} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Zoom out" onClick={onZoomOut} disabled={listView}>
-          <Minus size={17} aria-hidden="true" />
-        </IconButton>
         <IconButton
           label={listView ? "Show interactive map" : "Show accessible list view"}
           onClick={onToggleList}
@@ -84,25 +80,51 @@ export function CanvasControls(props: CanvasControlsProps) {
             className="toolbar-button px-3"
             href={`${basePath}${cvHref}`}
             download="Daniel_Laky_Remote_Roles_CV.pdf"
-            aria-label="Download Daniel Laky's CV"
-            title="Download CV"
+            aria-label="Download CV — English"
+            title="Download CV — English"
             data-testid="cv-download"
             onClick={onCv}
           >
             <Download size={16} aria-hidden="true" />
-            <span className="toolbar-button__label desktop-only">CV</span>
+            <span className="toolbar-button__label desktop-only">EN</span>
           </a>
         ) : (
           <button
             className="toolbar-button px-3"
             type="button"
-            aria-label="Daniel Laky's CV is not yet available"
-            title="CV file not yet added"
+            aria-label="Daniel Laky's English CV is not yet available"
+            title="English CV file not yet added"
             data-testid="cv-download"
             onClick={onCv}
           >
             <Download size={16} aria-hidden="true" />
-            <span className="toolbar-button__label desktop-only">CV</span>
+            <span className="toolbar-button__label desktop-only">EN</span>
+          </button>
+        )}
+        {cvSlovakAvailable ? (
+          <a
+            className="toolbar-button px-3"
+            href={`${basePath}${cvSlovakHref}`}
+            download="Daniel_Laky_CV_Slovak.pdf"
+            aria-label="Stiahnuť CV — Slovensky"
+            title="Stiahnuť CV — Slovensky"
+            data-testid="cv-download-slovak"
+            onClick={onCvSlovak}
+          >
+            <Download size={16} aria-hidden="true" />
+            <span className="toolbar-button__label desktop-only">SK</span>
+          </a>
+        ) : (
+          <button
+            className="toolbar-button px-3"
+            type="button"
+            aria-label="Slovenské CV Daniela Lakyho zatiaľ nie je dostupné"
+            title="Slovenské CV zatiaľ nebolo pridané"
+            data-testid="cv-download-slovak"
+            onClick={onCvSlovak}
+          >
+            <Download size={16} aria-hidden="true" />
+            <span className="toolbar-button__label desktop-only">SK</span>
           </button>
         )}
       </div>

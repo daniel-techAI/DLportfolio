@@ -33,6 +33,7 @@ type HistoryMarker = {
 type PortfolioShellProps = {
   basePath: string;
   cvAvailable: boolean;
+  cvSlovakAvailable: boolean;
   profileAvailable: boolean;
 };
 
@@ -44,7 +45,12 @@ function wait(duration: number) {
   return new Promise<void>((resolve) => window.setTimeout(resolve, duration));
 }
 
-export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: PortfolioShellProps) {
+export function PortfolioShell({
+  basePath,
+  cvAvailable,
+  cvSlovakAvailable,
+  profileAvailable,
+}: PortfolioShellProps) {
   const prefersReducedMotion = useReducedMotion();
   const reducedMotion = Boolean(prefersReducedMotion);
   const canvasRef = useRef<PortfolioCanvasHandle>(null);
@@ -239,10 +245,14 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
 
   const actionAvailable = useCallback(
     (action: PortfolioAction) => {
-      if (action.availability === "asset-dependent") return cvAvailable;
+      if (action.availability === "asset-dependent") {
+        if (action.id === portfolioData.actions.cv.id) return cvAvailable;
+        if (action.id === portfolioData.actions.cvSlovak.id) return cvSlovakAvailable;
+        return false;
+      }
       return action.availability === "available" && Boolean(action.href);
     },
-    [cvAvailable],
+    [cvAvailable, cvSlovakAvailable],
   );
 
   const runAction = useCallback(
@@ -267,6 +277,7 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
   );
 
   const openDetails = useCallback((node: PortfolioNode, origin: HTMLButtonElement) => {
+    if (node.kind === "credential" && node.status !== "earned") return;
     originRef.current = origin;
     setDetailNode(node);
     if (node.kind === "project") {
@@ -287,6 +298,7 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
   const activateNode = useCallback(
     async (node: PortfolioNode, origin: HTMLButtonElement) => {
       if (transitioning) return;
+      if (node.kind === "credential" && node.status !== "earned") return;
       if (node.childGraphId) {
         const targetPath = getGraphPathTo(
           node.childGraphId,
@@ -332,20 +344,30 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
     });
   }, []);
 
-  const openCv = useCallback(() => {
-    const cvAction = portfolioData.actions.cv;
-    if (cvAvailable) {
-      trackAction(cvAction);
-      return;
-    }
-    const cvNode = Object.values(portfolioData.graphs)
-      .flatMap((candidate) => candidate.nodes)
-      .find((node) => node.action?.id === cvAction.id);
-    if (cvNode) {
-      originRef.current = document.querySelector<HTMLButtonElement>("[data-testid='cv-download']");
-      setDetailNode(cvNode);
-    }
-  }, [cvAvailable, trackAction]);
+  const openCv = useCallback(
+    (action: PortfolioAction, available: boolean, testId: string) => {
+      if (available) {
+        trackAction(action);
+        return;
+      }
+      const cvNode = Object.values(portfolioData.graphs)
+        .flatMap((candidate) => candidate.nodes)
+        .find((node) => node.action?.id === action.id);
+      if (cvNode) {
+        originRef.current = document.querySelector<HTMLButtonElement>(`[data-testid='${testId}']`);
+        setDetailNode(cvNode);
+      }
+    },
+    [trackAction],
+  );
+
+  const openEnglishCv = useCallback(() => {
+    openCv(portfolioData.actions.cv, cvAvailable, "cv-download");
+  }, [cvAvailable, openCv]);
+
+  const openSlovakCv = useCallback(() => {
+    openCv(portfolioData.actions.cvSlovak, cvSlovakAvailable, "cv-download-slovak");
+  }, [cvSlovakAvailable, openCv]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -366,21 +388,17 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
       } else if (event.key === "Home") {
         event.preventDefault();
         navigateHome();
-      } else if ((event.key === "+" || event.key === "=") && !listView) {
-        event.preventDefault();
-        canvasRef.current?.zoomIn();
-      } else if (event.key === "-" && !listView) {
-        event.preventDefault();
-        canvasRef.current?.zoomOut();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeDetails, detailNode, helpOpen, listView, navigateBack, navigateHome, path.length]);
+  }, [closeDetails, detailNode, helpOpen, navigateBack, navigateHome, path.length]);
 
   const currentCenter = graph.nodes.find((node) => node.id === graph.centerNodeId);
   const cvHref = portfolioData.actions.cv.href ?? "/documents/Daniel_Laky_Remote_Roles_CV.pdf";
+  const cvSlovakHref =
+    portfolioData.actions.cvSlovak.href ?? "/documents/Daniel_Laky_CV_Slovak.pdf";
 
   return (
     <MotionConfig reducedMotion="user">
@@ -409,15 +427,16 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
             canGoBack={canGoBack}
             listView={listView}
             cvAvailable={cvAvailable}
+            cvSlovakAvailable={cvSlovakAvailable}
             basePath={basePath}
             cvHref={cvHref}
+            cvSlovakHref={cvSlovakHref}
             onBack={navigateBack}
             onHome={navigateHome}
             onToggleList={toggleListView}
             onHelp={() => setHelpOpen(true)}
-            onZoomIn={() => canvasRef.current?.zoomIn()}
-            onZoomOut={() => canvasRef.current?.zoomOut()}
-            onCv={openCv}
+            onCv={openEnglishCv}
+            onCvSlovak={openSlovakCv}
           />
         </header>
 
@@ -460,7 +479,7 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
 
         <div className="canvas-footer" aria-hidden={listView}>
           <p className="canvas-caption">
-            Drag to pan · Scroll or pinch to zoom · Select a node to move deeper
+            Drag to pan · Select a node to move deeper · View fits automatically
           </p>
           <p className="canvas-caption text-right">
             {currentCenter?.title ?? graph.title} · {graph.nodes.length - 1} connected items
@@ -477,6 +496,7 @@ export function PortfolioShell({ basePath, cvAvailable, profileAvailable }: Port
               node={detailNode}
               basePath={basePath}
               cvAvailable={cvAvailable}
+              cvSlovakAvailable={cvSlovakAvailable}
               onClose={closeDetails}
               onAction={trackAction}
             />

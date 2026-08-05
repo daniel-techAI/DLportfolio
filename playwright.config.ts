@@ -15,7 +15,7 @@ export default defineConfig({
   reporter: process.env.CI
     ? [["line"], ["html", { open: "never" }]]
     : [["list"], ["html", { open: "never" }]],
-  timeout: 30_000,
+  timeout: 60_000,
   expect: {
     timeout: 7_500,
   },

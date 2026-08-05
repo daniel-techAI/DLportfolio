@@ -50,8 +50,8 @@ export const portfolioActions = {
     label: "Recruitment email",
     kind: "email",
     icon: "mail",
-    value: "Daniellaky.uni@gmail.com",
-    href: "mailto:Daniellaky.uni@gmail.com?subject=Remote%20opportunity%20for%20Daniel%20Laky",
+    value: "daniellaky.uni@gmail.com",
+    href: "mailto:daniellaky.uni@gmail.com?subject=Remote%20opportunity%20for%20Daniel%20Laky",
     availability: "available",
     analyticsEvent: "email_clicked",
     ariaLabel: "Email Daniel Laky about a job opportunity",
@@ -103,7 +103,7 @@ export const portfolioActions = {
   },
   cv: {
     id: "cv",
-    label: "Download CV",
+    label: "Download CV — English",
     kind: "download",
     icon: "file-down",
     value: "Daniel_Laky_Remote_Roles_CV.pdf",
@@ -111,7 +111,19 @@ export const portfolioActions = {
     availability: "asset-dependent",
     download: "Daniel_Laky_Remote_Roles_CV.pdf",
     analyticsEvent: "cv_downloaded",
-    ariaLabel: "Download Daniel Laky's CV as a PDF",
+    ariaLabel: "Download Daniel Laky's English CV as a PDF",
+  },
+  cvSlovak: {
+    id: "cv-slovak",
+    label: "Stiahnuť CV — Slovensky",
+    kind: "download",
+    icon: "file-down",
+    value: "Daniel_Laky_CV_Slovak.pdf",
+    href: "/documents/Daniel_Laky_CV_Slovak.pdf",
+    availability: "asset-dependent",
+    download: "Daniel_Laky_CV_Slovak.pdf",
+    analyticsEvent: "cv_downloaded",
+    ariaLabel: "Stiahnuť slovenské CV Daniela Lakyho vo formáte PDF",
   },
   klinepilotLive: {
     id: "klinepilot-live",
@@ -728,7 +740,7 @@ const contactNodes = [
     kind: "contact",
     icon: "contact",
     featured: true,
-    childCount: 6,
+    childCount: 7,
     detail: detail(
       "Contact Daniel",
       "Daniel is open to suitable remote opportunities based in Slovakia.",
@@ -777,15 +789,29 @@ const contactNodes = [
   {
     id: "contact-cv",
     slug: "download-cv",
-    title: "Download CV",
+    title: "Download CV — English",
     descriptor: "Current professional CV · PDF",
     kind: "contact",
     icon: "file-down",
     action: portfolioActions.cv,
     detail: detail(
-      "Download CV",
-      "Download Daniel's current CV for remote customer support, operations and digital roles.",
+      "Download CV — English",
+      "Download Daniel's English CV for remote customer support, operations and digital roles.",
       { actions: [portfolioActions.cv] },
+    ),
+  },
+  {
+    id: "contact-cv-slovak",
+    slug: "download-cv-slovak",
+    title: "Stiahnuť CV — Slovensky",
+    descriptor: "Slovenský profesijný životopis · PDF",
+    kind: "contact",
+    icon: "file-down",
+    action: portfolioActions.cvSlovak,
+    detail: detail(
+      "Stiahnuť CV — Slovensky",
+      "Stiahnite si slovenský životopis Daniela pre pracovné príležitosti.",
+      { actions: [portfolioActions.cvSlovak] },
     ),
   },
   {
@@ -1947,33 +1973,36 @@ const credentialNode = (credential: Credential): PortfolioNode => ({
     verificationType: credential.verificationType,
     layoutWeight: credential.title.length > 34 ? 1.3 : 1,
   },
-  detail: {
-    title: credential.title,
-    subtitle: credential.issuer,
-    eyebrow: credential.verificationType,
-    description: credential.description,
-    status: credential.status,
-    dates: credential.issueDate ?? undefined,
-    tags: credential.skills,
-    images: credential.certificateImage ? [credential.certificateImage] : undefined,
-    actions: credential.credentialUrl
-      ? [
-          {
-            id: `verify-${credential.id}`,
-            label: "Verify credential",
-            kind: "external",
-            icon: "badge-check",
-            value: credential.credentialUrl,
-            href: credential.credentialUrl,
-            availability: "available",
-            external: true,
-            analyticsEvent: "credential_viewed",
-            ariaLabel: `Verify ${credential.title} in a new tab`,
-          },
-        ]
+  detail:
+    credential.status === "earned"
+      ? {
+          title: credential.title,
+          subtitle: credential.issuer,
+          eyebrow: credential.verificationType,
+          description: credential.description,
+          status: credential.status,
+          dates: credential.issueDate ?? undefined,
+          tags: credential.skills,
+          images: credential.certificateImage ? [credential.certificateImage] : undefined,
+          actions: credential.credentialUrl
+            ? [
+                {
+                  id: `verify-${credential.id}`,
+                  label: "Verify credential",
+                  kind: "external",
+                  icon: "badge-check",
+                  value: credential.credentialUrl,
+                  href: credential.credentialUrl,
+                  availability: "available",
+                  external: true,
+                  analyticsEvent: "credential_viewed",
+                  ariaLabel: `Verify ${credential.title} in a new tab`,
+                },
+              ]
+            : undefined,
+          credential,
+        }
       : undefined,
-    credential,
-  },
 });
 
 const createCredentialGraph = (category: CredentialCategoryDraft): GraphDefinition => {
@@ -1988,7 +2017,7 @@ const createCredentialGraph = (category: CredentialCategoryDraft): GraphDefiniti
       title: category.title,
       descriptor:
         categoryCredentials.length > 0
-          ? `${categoryCredentials.length} planned learning ${categoryCredentials.length === 1 ? "item" : "items"}`
+          ? `Work in progress · ${categoryCredentials.length} planned learning ${categoryCredentials.length === 1 ? "item" : "items"}`
           : "No credentials listed yet",
       kind: "credential-category",
       icon: category.icon,
@@ -2006,7 +2035,8 @@ const createCredentialGraph = (category: CredentialCategoryDraft): GraphDefiniti
     id: category.id,
     slug: category.slug,
     title: category.title,
-    description: `${category.title} certifications and learning plans.`,
+    description:
+      "Professional certifications and course credentials are currently in progress. Verified credentials will be added after completion.",
     centerNodeId,
     nodes,
     edges: connectFromCenter(centerNodeId, nodes),
@@ -2033,7 +2063,7 @@ const certificationNodes: readonly PortfolioNode[] = [
     id: "certifications-center",
     slug: "certifications",
     title: "Certifications and Learning",
-    descriptor: "A transparent view of earned, active and planned learning",
+    descriptor: "Work in progress",
     kind: "category",
     icon: "award",
     featured: true,
@@ -2045,7 +2075,7 @@ const certificationNodes: readonly PortfolioNode[] = [
       id: category.id,
       slug: category.slug,
       title: category.title,
-      descriptor: count > 0 ? `${count} planned` : "No entries yet",
+      descriptor: count > 0 ? `Work in progress · ${count} planned` : "No entries yet",
       kind: "credential-category",
       icon: category.icon,
       childGraphId: category.id,
@@ -2063,7 +2093,7 @@ const certificationsGraph: GraphDefinition = {
   slug: "certifications",
   title: "Certifications and Learning",
   description:
-    "Credentials are labelled by their real status. Planned learning is never presented as completed.",
+    "Professional certifications and course credentials are currently in progress. Verified credentials will be added after completion.",
   centerNodeId: "certifications-center",
   nodes: certificationNodes,
   edges: connectFromCenter("certifications-center", certificationNodes),
@@ -2121,7 +2151,12 @@ const rootNodes = [
         subtitle: "Open to remote opportunities",
         location: "Senec, Slovakia",
         images: [portfolioIdentity.profileImage],
-        actions: [portfolioActions.linkedin, portfolioActions.cv, portfolioActions.email],
+        actions: [
+          portfolioActions.linkedin,
+          portfolioActions.cv,
+          portfolioActions.cvSlovak,
+          portfolioActions.email,
+        ],
       },
     ),
   },
@@ -2174,7 +2209,7 @@ const rootNodes = [
     id: "root-certifications",
     slug: "certifications",
     title: "Certifications",
-    descriptor: "Credentials and transparent learning plans",
+    descriptor: "Work in progress · verified credentials will follow completion",
     kind: "category",
     icon: "award",
     childGraphId: "certifications",
@@ -2200,8 +2235,8 @@ const rootNodes = [
     kind: "category",
     icon: "contact",
     childGraphId: "contact",
-    childCount: 6,
-    meta: { countLabel: "6 options" },
+    childCount: 7,
+    meta: { countLabel: "7 options" },
   },
 ] as const satisfies readonly PortfolioNode[];
 

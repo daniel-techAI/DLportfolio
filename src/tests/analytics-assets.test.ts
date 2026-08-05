@@ -8,6 +8,9 @@ describe("asset helpers", () => {
     expect(getPublicAssetUrl(EXPECTED_ASSETS.cv, "/portfolio")).toBe(
       "/portfolio/documents/Daniel_Laky_Remote_Roles_CV.pdf",
     );
+    expect(getPublicAssetUrl(EXPECTED_ASSETS.cvSlovak, "/portfolio")).toBe(
+      "/portfolio/documents/Daniel_Laky_CV_Slovak.pdf",
+    );
     expect(hasUsableAssetPath("[CERTIFICATE_IMAGE]")).toBe(false);
     expect(hasUsableAssetPath("/images/projects/growthstack/")).toBe(false);
     expect(hasUsableAssetPath("/images/projects/growthstack/home.webp")).toBe(true);

@@ -9,6 +9,7 @@ type DetailPanelProps = {
   node: PortfolioNode | null;
   basePath: string;
   cvAvailable: boolean;
+  cvSlovakAvailable: boolean;
   onClose: () => void;
   onAction: (action: PortfolioAction) => void;
 };
@@ -18,8 +19,16 @@ function statusLabel(status: string) {
   return status;
 }
 
-function isActionAvailable(action: PortfolioAction, cvAvailable: boolean) {
-  if (action.availability === "asset-dependent") return cvAvailable;
+function isActionAvailable(
+  action: PortfolioAction,
+  cvAvailable: boolean,
+  cvSlovakAvailable: boolean,
+) {
+  if (action.availability === "asset-dependent") {
+    if (action.id === "cv") return cvAvailable;
+    if (action.id === "cv-slovak") return cvSlovakAvailable;
+    return false;
+  }
   return action.availability === "available" && Boolean(action.href);
 }
 
@@ -51,7 +60,14 @@ function DetailImage({ image, basePath }: { image: PortfolioImage; basePath: str
   );
 }
 
-export function DetailPanel({ node, basePath, cvAvailable, onClose, onAction }: DetailPanelProps) {
+export function DetailPanel({
+  node,
+  basePath,
+  cvAvailable,
+  cvSlovakAvailable,
+  onClose,
+  onAction,
+}: DetailPanelProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
@@ -230,7 +246,7 @@ export function DetailPanel({ node, basePath, cvAvailable, onClose, onAction }: 
               <h3>Actions</h3>
               <div className="action-list">
                 {actions.map((action) => {
-                  const available = isActionAvailable(action, cvAvailable);
+                  const available = isActionAvailable(action, cvAvailable, cvSlovakAvailable);
                   if (!available || !action.href) {
                     return (
                       <span

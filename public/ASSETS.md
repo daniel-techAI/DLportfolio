@@ -7,8 +7,9 @@ an optional asset is absent, so a missing file never becomes a broken-image icon
 
 - Add Daniel's profile photo as `images/profile/daniel-laky.jpg`. Use a square, high-quality JPEG;
   1,200 × 1,200 px is a practical source size.
-- The reviewed CV is stored as `documents/Daniel_Laky_Remote_Roles_CV.pdf`. Keep that exact filename
-  when replacing it so the download control continues to work.
+- The reviewed English CV is stored as `documents/Daniel_Laky_Remote_Roles_CV.pdf`, and the matching
+  Slovak CV is stored as `documents/Daniel_Laky_CV_Slovak.pdf`. Keep both exact filenames when
+  replacing them so their download controls continue to work.
 
 ## Optional project and credential files
 

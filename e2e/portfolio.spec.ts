@@ -100,6 +100,11 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   await expect(cvControl).toHaveAccessibleName(/cv/i);
   await expect(cvControl).toHaveAttribute("download", "Daniel_Laky_Remote_Roles_CV.pdf");
   await expect(cvControl).toHaveAttribute("href", /documents\/Daniel_Laky_Remote_Roles_CV\.pdf$/);
+  const slovakCvControl = page.getByTestId("cv-download-slovak");
+  await expect(slovakCvControl).toBeVisible();
+  await expect(slovakCvControl).toHaveAccessibleName(/Stiahnuť CV.*Slovensky/i);
+  await expect(slovakCvControl).toHaveAttribute("download", "Daniel_Laky_CV_Slovak.pdf");
+  await expect(slovakCvControl).toHaveAttribute("href", /documents\/Daniel_Laky_CV_Slovak\.pdf$/);
 
   const emailNode = await graphNode(page, "contact-email", /email/i);
   await emailNode.click();
@@ -107,7 +112,7 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   await expect(emailDialog).toBeVisible();
   await expect(emailDialog.getByRole("link", { name: /job opportunity/i })).toHaveAttribute(
     "href",
-    "mailto:Daniellaky.uni@gmail.com?subject=Remote%20opportunity%20for%20Daniel%20Laky",
+    "mailto:daniellaky.uni@gmail.com?subject=Remote%20opportunity%20for%20Daniel%20Laky",
   );
   await expect(
     emailDialog.getByRole("link", { name: /freelance work or a project enquiry/i }),
@@ -128,6 +133,38 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   const cvResponse = await page.request.get("./documents/Daniel_Laky_Remote_Roles_CV.pdf");
   expect(cvResponse.status()).toBe(200);
   expect((await cvResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  const slovakCvResponse = await page.request.get("./documents/Daniel_Laky_CV_Slovak.pdf");
+  expect(slovakCvResponse.status()).toBe(200);
+  expect((await slovakCvResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
+});
+
+test("keeps unfinished credentials inert and disables all manual map zoom", async ({ page }) => {
+  await page.goto("./?path=certifications/openai");
+  await expectGraphPath(page, "certifications/openai");
+
+  const plannedCredential = page.getByTestId("node-credential-openai-ai-foundations");
+  await expect(plannedCredential).toBeVisible();
+  await expect(plannedCredential).toBeDisabled();
+  await expect(plannedCredential).toHaveAttribute("data-interactive", "false");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.locator('[data-testid="list-view-toggle"]:visible').click();
+  const staticCredential = page.getByTestId("list-node-credential-openai-ai-foundations");
+  await expect(staticCredential).toBeVisible();
+  await expect(staticCredential.locator("summary, button, a")).toHaveCount(0);
+
+  await page.locator('[data-testid="list-view-toggle"]:visible').click();
+  await expect(page.getByRole("button", { name: /zoom in|zoom out/i })).toHaveCount(0);
+
+  const viewport = page.locator(".react-flow__viewport");
+  const transformBefore = await viewport.getAttribute("style");
+  await page.locator(".portfolio-flow").hover();
+  await page.mouse.wheel(0, -600);
+  await page.keyboard.press("+");
+  await page.keyboard.press("=");
+  await page.keyboard.press("-");
+  await page.locator(".portfolio-flow").dblclick({ position: { x: 40, y: 40 } });
+  await expect(viewport).toHaveAttribute("style", transformBefore ?? "");
 });
 
 test("supports keyboard entry, direct URLs, invalid-path recovery, and critical a11y", async ({

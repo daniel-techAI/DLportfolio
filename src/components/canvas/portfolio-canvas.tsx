@@ -26,8 +26,6 @@ import {
 } from "@/components/nodes/portfolio-node";
 
 export type PortfolioCanvasHandle = {
-  zoomIn: () => void;
-  zoomOut: () => void;
   fit: (duration?: number) => void;
   focusNode: (nodeId: string, duration?: number) => Promise<void>;
 };
@@ -192,8 +190,6 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
     useImperativeHandle(
       ref,
       () => ({
-        zoomIn: () => void reactFlow.zoomIn({ duration: reducedMotion ? 0 : 180 }),
-        zoomOut: () => void reactFlow.zoomOut({ duration: reducedMotion ? 0 : 180 }),
         fit,
         focusNode: async (nodeId, duration = reducedMotion ? 0 : 460) => {
           const node = nodes.find((candidate) => candidate.id === nodeId);
@@ -235,8 +231,8 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
           edgesFocusable={false}
           panOnDrag
           panOnScroll={false}
-          zoomOnScroll
-          zoomOnPinch
+          zoomOnScroll={false}
+          zoomOnPinch={false}
           zoomOnDoubleClick={false}
           preventScrolling
           onlyRenderVisibleElements

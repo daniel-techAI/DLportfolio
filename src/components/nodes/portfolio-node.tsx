@@ -54,6 +54,7 @@ export function PortfolioNode({
   const isProfile = item.kind === "profile";
   const isAction = Boolean(item.action);
   const hasChildGraph = Boolean(item.childGraphId);
+  const isInactiveCredential = item.kind === "credential" && item.status !== "earned";
   const profileImage = portfolioData.identity.profileImage;
   const profileSrc = `${basePath}${profileImage.src}`;
 
@@ -73,17 +74,20 @@ export function PortfolioNode({
   };
 
   const actionSuffix = item.action?.kind === "download" ? "Download" : "Open";
-  const ariaLabel = hasChildGraph
-    ? `Open ${item.title} map${childCount ? `, ${childCount} items` : ""}`
-    : isAction
-      ? `${actionSuffix} ${item.title}`
-      : `View details for ${item.title}`;
+  const ariaLabel = isInactiveCredential
+    ? `${item.title}, ${statusLabel(item.status ?? "planned")}. Details will be available after completion.`
+    : hasChildGraph
+      ? `Open ${item.title} map${childCount ? `, ${childCount} items` : ""}`
+      : isAction
+        ? `${actionSuffix} ${item.title}`
+        : `View details for ${item.title}`;
 
   return (
     <motion.article
       className={classNames}
       data-active={isActive}
       data-dimmed={isDimmed}
+      data-interactive={!isInactiveCredential}
       initial={{ opacity: 0, scale: 0.88 }}
       animate={{
         opacity: isDimmed ? 0.2 : 1,
@@ -102,9 +106,12 @@ export function PortfolioNode({
         type="button"
         className="graph-node__button nodrag nopan"
         data-testid={`node-${item.id}`}
+        data-interactive={!isInactiveCredential}
         aria-label={ariaLabel}
-        onClick={onClick}
-        whileTap={{ scale: 0.985 }}
+        aria-disabled={isInactiveCredential || undefined}
+        disabled={isInactiveCredential}
+        onClick={isInactiveCredential ? undefined : onClick}
+        whileTap={isInactiveCredential ? undefined : { scale: 0.985 }}
       >
         <span className="graph-node__topline">
           <span className="graph-node__icon" aria-hidden="true">
@@ -157,15 +164,17 @@ export function PortfolioNode({
               </span>
             ) : null}
           </span>
-          <span aria-hidden="true" className="text-[var(--color-accent-strong)]">
-            {item.action?.kind === "download" ? (
-              <ArrowDownToLine size={15} />
-            ) : item.action?.external ? (
-              <ArrowUpRight size={15} />
-            ) : (
-              <ChevronRight size={15} />
-            )}
-          </span>
+          {isInactiveCredential ? null : (
+            <span aria-hidden="true" className="text-[var(--color-accent-strong)]">
+              {item.action?.kind === "download" ? (
+                <ArrowDownToLine size={15} />
+              ) : item.action?.external ? (
+                <ArrowUpRight size={15} />
+              ) : (
+                <ChevronRight size={15} />
+              )}
+            </span>
+          )}
         </span>
       </motion.button>
       {isProfile && isCenter ? (

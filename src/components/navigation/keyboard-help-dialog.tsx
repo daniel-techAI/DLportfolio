@@ -7,7 +7,6 @@ const shortcuts = [
   ["Tab", "Move between portfolio nodes and controls"],
   ["Enter or Space", "Open the focused node"],
   ["Escape", "Close details or move back one portfolio level"],
-  ["Plus / Minus", "Zoom the interactive map in or out"],
   ["Home", "Return to Daniel’s root map"],
 ] as const;
 

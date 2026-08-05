@@ -13,6 +13,7 @@ function publicAssetExists(assetPath?: string) {
 export default function Home() {
   const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
   const cvAvailable = publicAssetExists(portfolioData.actions.cv.href);
+  const cvSlovakAvailable = publicAssetExists(portfolioData.actions.cvSlovak.href);
   const profileAvailable = publicAssetExists(portfolioData.identity.profileImage.src);
   const linkedin = portfolioData.actions.linkedin.href;
   const recruitmentEmail = portfolioData.actions.email;
@@ -76,6 +77,7 @@ export default function Home() {
       <PortfolioShell
         basePath={basePath}
         cvAvailable={cvAvailable}
+        cvSlovakAvailable={cvSlovakAvailable}
         profileAvailable={profileAvailable}
       />
       <noscript>

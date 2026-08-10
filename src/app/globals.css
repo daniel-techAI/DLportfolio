@@ -457,6 +457,11 @@ summary:focus-visible,
   min-height: 9.2rem;
 }
 
+.graph-node--credential.graph-node--featured {
+  border-color: rgb(169 194 159 / 40%);
+  box-shadow: var(--shadow-active);
+}
+
 .graph-node--timeline {
   width: 17rem;
   min-height: 9.5rem;

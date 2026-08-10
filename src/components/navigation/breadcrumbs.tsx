@@ -10,14 +10,16 @@ export type BreadcrumbItem = {
 
 export function Breadcrumbs({
   items,
+  label,
   onNavigate,
 }: {
   items: readonly BreadcrumbItem[];
+  label: string;
   onNavigate: (path: string[]) => void;
 }) {
   return (
     <div className="breadcrumbs-shell">
-      <nav className="breadcrumbs" aria-label="Portfolio path" data-testid="breadcrumbs">
+      <nav className="breadcrumbs" aria-label={label} data-testid="breadcrumbs">
         {items.map((item, index) => (
           <span className="contents" key={item.id}>
             {index > 0 ? (

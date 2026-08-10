@@ -20,7 +20,11 @@ not been supplied remain deliberately unavailable:
 - The profile photograph has a designed fallback until the real JPEG is added.
 - Reviewed English and Slovak CVs are available as direct PDF downloads.
 - Project galleries use labelled placeholders.
-- Every initial credential is marked `planned`; none is presented as earned.
+- The focused credential roadmap contains 4 completed credentials and 14 clearly separated planned
+  credentials. Completed OpenAI course certificates are labelled as course completions; the completed
+  Google Shopping Ads credential is labelled as a vendor certification.
+- The four supporting credential PDFs and the issuer-supplied Google badge are available on demand;
+  the private source credential JSON is not published.
 
 ### Screenshot placeholders
 
@@ -34,6 +38,7 @@ and capture sizes are documented in [`docs/screenshots/README.md`](docs/screensh
 - Mouse, trackpad, keyboard, and touch navigation with automatic fit-to-view at every graph level.
 - Continuous Motion transitions with a reduced-motion alternative.
 - Accessible detail panels with focus management and a shared-data semantic list view.
+- English and Slovak presentation layers backed by the same graph, credential, project and action data.
 - Static metadata, Open Graph/Twitter metadata, robots, sitemap, and Person structured data.
 - No-op analytics events that only forward to an already installed, consent-aware runtime.
 - Unit tests for graph logic and Playwright smoke coverage for essential user journeys.
@@ -106,6 +111,7 @@ src/
   app/                  Next.js shell, metadata, error/loading states, and global theme
   components/           Canvas, nodes, navigation, panels, and shared UI
   data/portfolio.ts     The single source of truth for portfolio content and graph structure
+  data/localization.ts  EN/SK presentation copy and non-destructive localization helpers
   lib/                  Layout, navigation, URL, asset, analytics, and status utilities
   types/portfolio.ts    Public content and graph contracts
   tests/                Unit tests
@@ -171,6 +177,31 @@ Never add claimed customers, revenue, user counts, traction, or outcomes without
 
 ### Add or complete a credential
 
+The core roadmap is deliberately narrow:
+
+**Completed (4)**
+
+| Issuer             | Official title                        | Classification                | Issued      | Expires     | ID         |
+| ------------------ | ------------------------------------- | ----------------------------- | ----------- | ----------- | ---------- |
+| OpenAI Academy     | AI Foundations                        | Course Completion Certificate | Aug 8, 2026 | —           | ee4dbt13hc |
+| OpenAI Academy     | Applied AI Foundations                | Course Completion Certificate | Aug 8, 2026 | —           | 0ib8lgjtrv |
+| OpenAI Academy     | Agents and Workflows                  | Course Completion Certificate | Aug 8, 2026 | —           | 77ariorgbi |
+| Skillshop / Google | AI-Powered Shopping ads Certification | Vendor Certification          | Aug 9, 2026 | Aug 9, 2027 | 191040496  |
+
+**Planned (14):** Anthropic — Claude 101, AI Fluency: Framework & Foundations, Claude Code in
+Action; Google — Google Analytics Certification, Google Ads Search Certification; HubSpot —
+Digital Marketing Certification, Inbound Sales Certification, Revenue Operations Certification;
+IBM — Project Management Fundamentals, Data Fundamentals; Microsoft Applied Skills — Create and
+manage automated processes by using Power Automate, Streamline business workflows with AI chat,
+Generate reports with AI research agents; GitHub — GitHub Foundations Certification.
+
+The three Microsoft entries are classified as **Applied Skills Credential**. GitHub Foundations is
+classified as **GitHub Certification**, not as one of GitHub's beginner tutorial completions.
+
+Do not restore superseded beginner entries or decorative issuer categories. Course completions,
+learning badges, vendor certifications, Applied Skills credentials and professional certifications
+must retain their truthful classification.
+
 Credential records support:
 
 ```ts
@@ -179,29 +210,34 @@ Credential records support:
   title: "Credential title",
   issuer: "Issuer",
   category: "Issuer",
-  issueDate: "2026-07",
+  issueDate: "2026-08-08",
   expirationDate: null,
+  credentialId: "issuer-supplied-id",
   credentialUrl: "https://issuer.example/verify/...",
-  certificateImage: {
-    id: "issuer-credential-image",
-    src: "/images/certificates/issuer-credential.webp",
-    alt: "Credential title certificate issued to Daniel Laky",
-    placeholderLabel: "Credential image",
-    availability: "available",
-  },
+  certificateUrl: "/documents/certificates/semantic-certificate-name.pdf",
+  certificateName: "Name printed by the issuer",
+  certificateImage: null,
   status: "earned",
   description: "A factual description of the verified credential.",
   skills: ["Relevant skill"],
   featured: false,
-  verificationType: "verified digital credential",
+  verificationType: "Course Completion Certificate",
 }
 ```
 
-Only change `status` to `earned` after the credential is actually awarded. Add the verification URL
-and certificate image at the same time. Use `in progress` for active study and `planned` for intended
-learning; the UI distinguishes all three with text and icons as well as colour. Planned and
-in-progress credential cards remain visible but static: they cannot open details, images, or
-verification actions until the credential is earned.
+Only change `status` to `earned` after the credential is actually awarded. Add issuer evidence as a
+local `certificateUrl`, an official `credentialUrl`, or both. A certificate image is optional; do not
+create a fake one. Use `in progress` only for active study and `planned` for intended learning. The UI
+distinguishes status with text and icons as well as colour. Planned and in-progress credential cards
+remain visible but static: they cannot open details, images, or verification actions until earned.
+
+### English and Slovak content
+
+English is the canonical content in `src/data/portfolio.ts`. `src/data/localization.ts` translates
+presentation copy into Slovak while preserving official credential and project titles, issuer names,
+IDs, slugs, URLs and file paths. When adding user-facing copy, add its Slovak equivalent through the
+existing localization layer and run both localization unit tests and the language-switching browser
+test. Do not create a second graph or credential source for Slovak.
 
 ### Edit graph structure
 
@@ -266,30 +302,38 @@ creates a host-agnostic `out/` directory and does not require a Node server in p
 
 ## Environment configuration
 
-| Variable                          | Default                           | Purpose                                                                         |
-| --------------------------------- | --------------------------------- | ------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`            | `https://example.com` placeholder | Absolute production origin for canonical and social metadata                    |
-| `NEXT_PUBLIC_BASE_PATH`           | empty                             | Subdirectory prefix such as `/daniel-laky-portfolio`                            |
-| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | empty                             | Enables event forwarding only when a consent-aware `window.gtag` already exists |
-| `PLAYWRIGHT_BASE_URL`             | local preview                     | Makes Playwright target an existing deployment                                  |
+| Variable                               | Default                           | Purpose                                                                                  |
+| -------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                 | `https://example.com` placeholder | Absolute production origin for canonical and social metadata                             |
+| `NEXT_PUBLIC_BASE_PATH`                | empty                             | Subdirectory prefix such as `/DLportfolio`                                               |
+| `NEXT_PUBLIC_GTM_ID`                   | empty                             | Enables forwarding to an already installed, consent-aware GTM `dataLayer`                |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID`        | empty                             | Enables fallback forwarding to an already installed, consent-aware `window.gtag`         |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | empty                             | Search Console HTML-tag verification token only, without the surrounding `<meta>` markup |
+| `PLAYWRIGHT_BASE_URL`                  | local preview                     | Makes Playwright target an existing deployment                                           |
 
 `NEXT_PUBLIC_BASE_PATH` is a build-time setting. Use a leading slash and no trailing slash. All
 public-asset and navigation URLs must pass through the application's base-path helper.
 
 ## Analytics preparation and consent
 
-`src/lib/analytics.ts` supports these typed events:
+`src/lib/analytics.ts` supports these typed, evidence-oriented events:
 
 - `graph_opened`
 - `project_viewed`
+- `project_link_clicked`
 - `credential_viewed`
+- `credential_verification_clicked`
+- `contact_action`
 - `cv_downloaded`
 - `linkedin_clicked`
 - `github_clicked`
 - `email_clicked`
 
-The module is deliberately inert unless both `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` and an existing
-`window.gtag` function are present. It never injects Google scripts, writes cookies, or stores consent.
+The module is deliberately inert unless an ID is configured **and** the matching consent-aware
+runtime already exists. With `NEXT_PUBLIC_GTM_ID`, events go to `window.dataLayer`; with only
+`NEXT_PUBLIC_GA_MEASUREMENT_ID`, they go to `window.gtag`. GTM is preferred when both are configured,
+which avoids duplicate forwarding. The module never injects Google scripts, writes cookies, or
+stores consent. Merely setting an ID does not install or activate Google Analytics.
 
 To add Google Analytics later:
 
@@ -298,11 +342,48 @@ To add Google Analytics later:
 2. Add a consent interface and load Google's script only after the visitor makes the required choice.
 3. Provide a privacy notice, retention settings, consent withdrawal, and any required regional
    defaults before collecting data.
-4. Set `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` only in the deployment environment, rebuild, and verify that
-   no network request or cookie occurs before consent.
+4. Install either GTM or GA4 through that consent gate, set `NEXT_PUBLIC_GTM_ID` or
+   `NEXT_PUBLIC_GA_MEASUREMENT_ID` in the deployment environment, rebuild, and verify that no Google
+   request or cookie occurs before consent.
 
 Do not paste a measurement script directly into the root layout merely because the event abstraction
 exists.
+
+## SEO and Google Search Console
+
+The static export includes canonical metadata, Open Graph and X metadata, Person structured data,
+`robots.txt`, and `sitemap.xml`. Set `NEXT_PUBLIC_SITE_URL` to the real HTTPS origin before a
+production build; `NEXT_PUBLIC_BASE_PATH` supplies the GitHub Pages project path when required.
+
+For Google Search Console HTML-tag verification, copy only the token from Google's
+`content="..."` value into `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, rebuild, deploy, confirm the tag is
+present in the exported page, then complete verification in Search Console. Submit the deployed
+`sitemap.xml` after the canonical domain is final. No verification token is committed to this
+repository.
+
+## Firebase decision
+
+**Firebase reviewed — not currently necessary for this repository.** The portfolio is a static
+export with no authentication, database, uploads, messaging or server-side feature that Firebase
+would solve. Reconsider it only when a concrete product requirement needs one of those services.
+
+## Locriva and Emotecture follow-up
+
+This update does not claim analytics or SEO work in another repository. The relevant next steps are
+kept intentionally short. An adjacent Locriva checkout was reviewed; its own launch/privacy guidance
+requires privacy and consent work before analytics activation. No Emotecture repository was available
+in this workspace.
+
+The remaining checklist is:
+
+| Project    | Integration                                                                         | Required access/config                                                                                            | Next action                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Locriva    | Consent-aware GTM/GA4, Search Console, technical SEO and real lead events           | Explicit repository scope, production domain, GTM/GA4 IDs, Search Console token and approved privacy/consent flow | Review its existing launch/privacy constraints, then implement only after consent requirements and real lead actions are confirmed   |
+| Emotecture | Technical SEO, Search Console and commerce measurement only for features that exist | Repository/platform access, production URL, actual catalogue/funnel evidence, IDs and verification token          | Supply the repository and deployment context; map real product/contact/checkout actions before adding events or Merchant Center work |
+
+Shopping Ads, Merchant Center, product feeds and Performance Max for Retail remain
+credential-backed knowledge/future application paths. Neither project should claim active campaigns,
+feeds, spend or results until those implementations can be verified.
 
 ## Deployment
 
@@ -323,7 +404,8 @@ The `.github/workflows/deploy-pages.yml` workflow publishes automatically after 
 
 1. Push the repository to GitHub with `main` as the default branch.
 2. In **Settings → Pages**, choose **GitHub Actions** as the source.
-3. Optionally add the repository variable `NEXT_PUBLIC_SITE_URL` for a custom canonical origin.
+3. Add the relevant repository variables from the environment table. Analytics IDs are optional and
+   must not be set until the matching consent-aware runtime exists.
 4. Push to `main`, or run **Deploy static export to GitHub Pages** manually from the Actions tab.
 
 The workflow uses `https://<owner>.github.io` as the site origin, builds project sites with
@@ -355,9 +437,10 @@ npm run quality
 
 The Playwright smoke suite verifies the root graph, Projects and Growthstack navigation, browser Back,
 Escape to root, both CV controls, sequential keyboard entry, direct URLs, invalid-path recovery,
-inactive planned credentials, disabled manual zoom, and serious or critical automated accessibility
-violations. It also exercises the narrow-screen list view and checks that the document does not
-overflow horizontally. The CI workflow repeats these checks on pushes to `main` and pull requests.
+completed credential details, inactive planned credentials, EN/SK switching, disabled manual zoom,
+and serious or critical automated accessibility violations. It also exercises narrow-screen list
+view and checks that the document does not overflow horizontally. The CI workflow repeats these
+checks on pushes to `main` and pull requests.
 
 Dependency overrides keep the statically exported build on patched PostCSS and Sharp releases.
 Dependabot and `npm audit` should remain clear before deployment; do not force incompatible framework
@@ -376,7 +459,7 @@ Before publishing new or revised content:
 
 - Add verified project demonstrations and case studies as they become real.
 - Replace gallery placeholders with responsibly compressed, captioned photography.
-- Add earned credential images and issuer verification links.
+- Add future credential evidence only after it is genuinely earned and verified.
 - Add visual regression snapshots after the real assets stabilise.
 - Add a consent-managed analytics provider only if its value justifies the privacy cost.
 - Revisit content and skill labels as Daniel gains evidence and experience.

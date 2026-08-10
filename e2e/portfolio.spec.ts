@@ -57,6 +57,24 @@ async function findCvControl(page: Page): Promise<Locator> {
   return page.getByTestId("cv-download");
 }
 
+async function switchPortfolioLanguage(page: Page, locale: "en" | "sk"): Promise<void> {
+  const stableControl = page.getByTestId(`language-${locale}`);
+  if ((await stableControl.count()) > 0) {
+    await stableControl.filter({ visible: true }).first().click();
+    return;
+  }
+
+  const accessibleName =
+    locale === "sk"
+      ? /switch portfolio language to slovak|prepnúť jazyk portfólia do slovenčiny/i
+      : /switch portfolio language to english|prepnúť jazyk portfólia do angličtiny/i;
+  await page
+    .getByRole("button", { name: accessibleName })
+    .filter({ visible: true })
+    .first()
+    .click();
+}
+
 test("navigates the portfolio hierarchy with history, Escape, and the CV action", async ({
   page,
 }) => {
@@ -102,7 +120,7 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   await expect(cvControl).toHaveAttribute("href", /documents\/Daniel_Laky_Remote_Roles_CV\.pdf$/);
   const slovakCvControl = page.getByTestId("cv-download-slovak");
   await expect(slovakCvControl).toBeVisible();
-  await expect(slovakCvControl).toHaveAccessibleName(/Stiahnuť CV.*Slovensky/i);
+  await expect(slovakCvControl).toHaveAccessibleName(/Download CV.*Slovak/i);
   await expect(slovakCvControl).toHaveAttribute("download", "Daniel_Laky_CV_Slovak.pdf");
   await expect(slovakCvControl).toHaveAttribute("href", /documents\/Daniel_Laky_CV_Slovak\.pdf$/);
 
@@ -138,18 +156,68 @@ test("navigates the portfolio hierarchy with history, Escape, and the CV action"
   expect((await slovakCvResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
 });
 
-test("keeps unfinished credentials inert and disables all manual map zoom", async ({ page }) => {
+test("opens completed credentials, keeps planned credentials inert, and disables manual zoom", async ({
+  page,
+}) => {
   await page.goto("./?path=certifications/openai");
   await expectGraphPath(page, "certifications/openai");
 
-  const plannedCredential = page.getByTestId("node-credential-openai-ai-foundations");
+  const completedCredential = page.getByTestId("node-credential-openai-ai-foundations");
+  await expect(completedCredential).toBeVisible();
+  await expect(completedCredential).toBeEnabled();
+  await expect(completedCredential).toHaveAttribute("data-interactive", "true");
+  await completedCredential.click();
+
+  const completedDialog = page.getByRole("dialog", { name: /AI Foundations/i });
+  await expect(completedDialog).toBeVisible();
+  await expect(completedDialog.getByText(/Course Completion Certificate/i).first()).toBeVisible();
+  await expect(completedDialog.getByRole("link", { name: /view.*certificate/i })).toHaveAttribute(
+    "href",
+    /documents\/certificates\/openai-ai-foundations-ee4dbt13hc\.pdf$/,
+  );
+  const certificateResponse = await page.request.get(
+    "./documents/certificates/openai-ai-foundations-ee4dbt13hc.pdf",
+  );
+  expect(certificateResponse.status()).toBe(200);
+  expect((await certificateResponse.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  await page.keyboard.press("Escape");
+
+  await page.goto("./?path=certifications/google");
+  await expectGraphPath(page, "certifications/google");
+  const shoppingAdsCredential = page.getByTestId(
+    "node-credential-google-ai-powered-shopping-ads-certification",
+  );
+  await expect(shoppingAdsCredential).toBeVisible();
+  await expect(shoppingAdsCredential).toBeEnabled();
+  await shoppingAdsCredential.click();
+  const shoppingAdsDialog = page.getByRole("dialog", {
+    name: /AI-Powered Shopping ads Certification/i,
+  });
+  await expect(shoppingAdsDialog.getByText(/Vendor Certification/i).first()).toBeVisible();
+  await expect(shoppingAdsDialog.getByRole("link", { name: /view.*certificate/i })).toHaveAttribute(
+    "href",
+    /documents\/certificates\/google-ai-powered-shopping-ads-191040496\.pdf$/,
+  );
+  await expect(
+    shoppingAdsDialog.getByRole("link", { name: /verify.*credential/i }),
+  ).toHaveAttribute("href", "https://www.credential.net/d7037419-917a-4d37-93c6-cc8e809fb597");
+  const shoppingAdsPdf = await page.request.get(
+    "./documents/certificates/google-ai-powered-shopping-ads-191040496.pdf",
+  );
+  expect(shoppingAdsPdf.status()).toBe(200);
+  expect((await shoppingAdsPdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  await page.keyboard.press("Escape");
+
+  await page.goto("./?path=certifications/anthropic");
+  await expectGraphPath(page, "certifications/anthropic");
+  const plannedCredential = page.getByTestId("node-credential-anthropic-claude-101");
   await expect(plannedCredential).toBeVisible();
   await expect(plannedCredential).toBeDisabled();
   await expect(plannedCredential).toHaveAttribute("data-interactive", "false");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.locator('[data-testid="list-view-toggle"]:visible').click();
-  const staticCredential = page.getByTestId("list-node-credential-openai-ai-foundations");
+  const staticCredential = page.getByTestId("list-node-credential-anthropic-claude-101");
   await expect(staticCredential).toBeVisible();
   await expect(staticCredential.locator("summary, button, a")).toHaveCount(0);
 
@@ -165,6 +233,27 @@ test("keeps unfinished credentials inert and disables all manual map zoom", asyn
   await page.keyboard.press("-");
   await page.locator(".portfolio-flow").dblclick({ position: { x: 40, y: 40 } });
   await expect(viewport).toHaveAttribute("style", transformBefore ?? "");
+});
+
+test("switches the shared portfolio between English and Slovak", async ({ page }) => {
+  await page.goto("./");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(await graphNode(page, "root-projects", /projects/i)).toBeVisible();
+
+  await switchPortfolioLanguage(page, "sk");
+  await expect(page.locator("html")).toHaveAttribute("lang", "sk");
+  await expect(await graphNode(page, "root-projects", /projekty/i)).toBeVisible();
+
+  await openGraphNode(page, "root-certifications", /certifikáty|osvedčenia/i, "certifications");
+  await expect(
+    page.getByText("4 dokončené · 14 plánovaných", { exact: false }).first(),
+  ).toBeVisible();
+
+  await switchPortfolioLanguage(page, "en");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(
+    page.getByText("Certifications and Learning", { exact: true }).first(),
+  ).toBeVisible();
 });
 
 test("supports keyboard entry, direct URLs, invalid-path recovery, and critical a11y", async ({

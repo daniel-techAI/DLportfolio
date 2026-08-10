@@ -2,15 +2,17 @@
 
 import { Accessibility, X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
+import type { PortfolioUiCopy } from "@/data/localization";
 
-const shortcuts = [
-  ["Tab", "Move between portfolio nodes and controls"],
-  ["Enter or Space", "Open the focused node"],
-  ["Escape", "Close details or move back one portfolio level"],
-  ["Home", "Return to Daniel’s root map"],
-] as const;
-
-export function KeyboardHelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function KeyboardHelpDialog({
+  open,
+  copy,
+  onClose,
+}: {
+  open: boolean;
+  copy: PortfolioUiCopy["help"];
+  onClose: () => void;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -37,25 +39,20 @@ export function KeyboardHelpDialog({ open, onClose }: { open: boolean; onClose: 
       <div className="dialog-shell">
         <header className="dialog-header">
           <div className="dialog-header__copy">
-            <span className="graph-node__eyebrow">Navigation guide</span>
+            <span className="graph-node__eyebrow">{copy.eyebrow}</span>
             <h2 id={titleId} className="dialog-title">
-              Keyboard help
+              {copy.title}
             </h2>
           </div>
-          <button
-            className="dialog-close"
-            type="button"
-            onClick={onClose}
-            aria-label="Close keyboard help"
-          >
+          <button className="dialog-close" type="button" onClick={onClose} aria-label={copy.close}>
             <X size={18} aria-hidden="true" />
           </button>
         </header>
         <div className="dialog-content">
           <section className="detail-section">
-            <h3>Shortcuts</h3>
+            <h3>{copy.shortcutsTitle}</h3>
             <dl className="grid gap-3">
-              {shortcuts.map(([keys, description]) => (
+              {copy.shortcuts.map(([keys, description]) => (
                 <div className="grid grid-cols-[8rem_1fr] items-start gap-3" key={keys}>
                   <dt>
                     <kbd className="tag font-mono">{keys}</kbd>
@@ -68,11 +65,10 @@ export function KeyboardHelpDialog({ open, onClose }: { open: boolean; onClose: 
             </dl>
           </section>
           <section className="detail-section">
-            <h3>Motion preference</h3>
+            <h3>{copy.motionTitle}</h3>
             <p className="flex items-start gap-2" role="status">
               <Accessibility className="mt-1 shrink-0" size={16} aria-hidden="true" />
-              Reduced-motion preferences are respected automatically. When active, map changes use
-              short fades without large viewport movement.
+              {copy.motionDescription}
             </p>
           </section>
         </div>

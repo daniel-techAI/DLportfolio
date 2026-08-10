@@ -1,8 +1,16 @@
 "use client";
 
-import { ArrowDownToLine, ArrowUpRight, BadgeCheck, CircleAlert, ImageIcon, X } from "lucide-react";
+import { ArrowDownToLine, ArrowUpRight, CircleAlert, ImageIcon, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import {
+  formatPortfolioDate,
+  formatPortfolioProficiency,
+  formatPortfolioStatus,
+  formatPortfolioVerificationType,
+  type PortfolioLocale,
+  type PortfolioUiCopy,
+} from "@/data/localization";
 import type { PortfolioAction, PortfolioImage, PortfolioNode } from "@/types/portfolio";
 
 type DetailPanelProps = {
@@ -10,14 +18,11 @@ type DetailPanelProps = {
   basePath: string;
   cvAvailable: boolean;
   cvSlovakAvailable: boolean;
+  locale: PortfolioLocale;
+  copy: PortfolioUiCopy;
   onClose: () => void;
   onAction: (action: PortfolioAction) => void;
 };
-
-function statusLabel(status: string) {
-  if (status === "in progress") return "Currently studying";
-  return status;
-}
 
 function isActionAvailable(
   action: PortfolioAction,
@@ -65,6 +70,8 @@ export function DetailPanel({
   basePath,
   cvAvailable,
   cvSlovakAvailable,
+  locale,
+  copy,
   onClose,
   onAction,
 }: DetailPanelProps) {
@@ -115,7 +122,7 @@ export function DetailPanel({
         <header className="dialog-header">
           <div className="dialog-header__copy">
             <span className="graph-node__eyebrow">
-              {detail?.eyebrow ?? node.kind.replaceAll("-", " ")}
+              {detail?.eyebrow ?? copy.node.kind[node.kind]}
             </span>
             <h2 id={titleId} className="dialog-title">
               {detail?.title ?? node.title}
@@ -128,25 +135,33 @@ export function DetailPanel({
             className="dialog-close"
             type="button"
             onClick={onClose}
-            aria-label="Close details"
+            aria-label={copy.detail.close}
           >
             <X size={18} aria-hidden="true" />
           </button>
         </header>
 
         <div className="dialog-content">
-          <div className="flex flex-wrap gap-2" aria-label="Item status and dates">
+          <div className="flex flex-wrap gap-2" aria-label={copy.detail.statusAndDates}>
             {(detail?.status ?? node.status) ? (
               <span
                 className="status-chip"
                 data-status={(detail?.status ?? node.status)?.replaceAll(" ", "-")}
               >
-                {statusLabel((detail?.status ?? node.status) as string)}
+                {formatPortfolioStatus((detail?.status ?? node.status)!, locale)}
               </span>
             ) : null}
-            {node.proficiency ? <span className="proficiency-chip">{node.proficiency}</span> : null}
+            {node.proficiency ? (
+              <span className="proficiency-chip">
+                {formatPortfolioProficiency(node.proficiency, locale)}
+              </span>
+            ) : null}
             {(detail?.dates ?? node.meta?.dates) ? (
-              <span className="tag">{detail?.dates ?? node.meta?.dates}</span>
+              <span className="tag">
+                {/^\d{4}-\d{2}-\d{2}$/.test((detail?.dates ?? node.meta?.dates)!)
+                  ? formatPortfolioDate((detail?.dates ?? node.meta?.dates)!, locale)
+                  : (detail?.dates ?? node.meta?.dates)}
+              </span>
             ) : null}
             {(detail?.location ?? node.meta?.location) ? (
               <span className="tag">{detail?.location ?? node.meta?.location}</span>
@@ -154,11 +169,9 @@ export function DetailPanel({
           </div>
 
           <section className="detail-section">
-            <h3>Overview</h3>
+            <h3>{copy.detail.overview}</h3>
             <p id={descriptionId}>
-              {detail?.description ??
-                node.descriptor ??
-                "Additional details will be added as this work develops."}
+              {detail?.description ?? node.descriptor ?? copy.detail.fallbackDescription}
             </p>
           </section>
 
@@ -167,7 +180,7 @@ export function DetailPanel({
               {section.title ? <h3>{section.title}</h3> : null}
               {section.status ? (
                 <span className="status-chip" data-status={section.status.replaceAll(" ", "-")}>
-                  {statusLabel(section.status)}
+                  {formatPortfolioStatus(section.status, locale)}
                 </span>
               ) : null}
               {section.body ? <p>{section.body}</p> : null}
@@ -183,43 +196,52 @@ export function DetailPanel({
 
           {credential ? (
             <section className="detail-section">
-              <h3>Credential information</h3>
+              <h3>{copy.detail.credentialInformation}</h3>
               <div className="flex flex-wrap gap-2">
-                <span className="tag">Issuer: {credential.issuer}</span>
-                <span className="tag">{credential.verificationType}</span>
-                <span className="tag">Status: {statusLabel(credential.status)}</span>
+                <span className="tag">
+                  {copy.detail.issuer}: {credential.issuer}
+                </span>
+                <span className="tag">
+                  {formatPortfolioVerificationType(credential.verificationType, locale)}
+                </span>
+                <span className="tag">
+                  {copy.detail.status}: {formatPortfolioStatus(credential.status, locale)}
+                </span>
                 {credential.issueDate ? (
-                  <span className="tag">Issued {credential.issueDate}</span>
+                  <span className="tag">
+                    {copy.detail.issued}: {formatPortfolioDate(credential.issueDate, locale)}
+                  </span>
                 ) : null}
                 {credential.expirationDate ? (
-                  <span className="tag">Expires {credential.expirationDate}</span>
+                  <span className="tag">
+                    {copy.detail.expires}: {formatPortfolioDate(credential.expirationDate, locale)}
+                  </span>
+                ) : null}
+                {credential.credentialId ? (
+                  <span className="tag">
+                    {copy.detail.credentialId}: {credential.credentialId}
+                  </span>
+                ) : null}
+                {credential.certificateName ? (
+                  <span className="tag">
+                    {copy.detail.certificateName}: {credential.certificateName}
+                  </span>
                 ) : null}
               </div>
-              {credential.status === "earned" && credential.credentialUrl ? (
-                <a
-                  className="detail-action"
-                  href={credential.credentialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <BadgeCheck size={16} aria-hidden="true" />
-                  Verify credential
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              ) : (
+              {!credential.certificateUrl && !credential.credentialUrl ? (
                 <p className="flex items-start gap-2">
                   <CircleAlert className="mt-1 shrink-0" size={15} aria-hidden="true" />
                   {credential.status === "planned"
-                    ? "This is planned learning and is not presented as an earned credential."
-                    : "Verification will appear when a credential URL is available."}
+                    ? copy.detail.plannedNotice
+                    : copy.detail.verificationUnavailable}
                 </p>
-              )}
+              ) : null}
             </section>
           ) : null}
 
           {detail?.tags?.length ? (
             <section className="detail-section">
-              <h3>Skills and themes</h3>
+              <h3>{copy.detail.skillsAndThemes}</h3>
               <div className="tag-list">
                 {detail.tags.map((tag) => (
                   <span className="tag" key={tag}>
@@ -232,7 +254,7 @@ export function DetailPanel({
 
           {detail?.images?.length ? (
             <section className="detail-section">
-              <h3>Gallery</h3>
+              <h3>{copy.detail.gallery}</h3>
               <div className="gallery-grid">
                 {detail.images.map((image) => (
                   <DetailImage image={image} basePath={basePath} key={image.id} />
@@ -243,20 +265,34 @@ export function DetailPanel({
 
           {actions.length ? (
             <section className="detail-section">
-              <h3>Actions</h3>
+              <h3>{copy.detail.actions}</h3>
               <div className="action-list">
                 {actions.map((action) => {
                   const available = isActionAvailable(action, cvAvailable, cvSlovakAvailable);
+                  const actionLabel =
+                    action.analyticsDestination === "certificate"
+                      ? copy.detail.viewCertificate
+                      : action.analyticsDestination === "verification"
+                        ? copy.detail.verifyCredential
+                        : action.label;
+                  const isCredentialAction =
+                    action.analyticsDestination === "certificate" ||
+                    action.analyticsDestination === "verification";
+                  const actionAriaLabel = isCredentialAction
+                    ? `${actionLabel}: ${detail?.title ?? node.title}${
+                        action.external ? `, ${copy.detail.opensNewTab}` : ""
+                      }`
+                    : (action.ariaLabel ?? actionLabel);
                   if (!available || !action.href) {
                     return (
                       <span
                         className="detail-action"
                         aria-disabled="true"
-                        title="This detail has not been configured yet"
+                        title={copy.detail.unavailableTitle}
                         key={action.id}
                       >
                         <CircleAlert size={15} aria-hidden="true" />
-                        {action.label} unavailable
+                        {actionLabel} {copy.detail.unavailable}
                       </span>
                     );
                   }
@@ -264,11 +300,11 @@ export function DetailPanel({
                   return (
                     <a
                       className="detail-action"
-                      href={`${action.kind === "download" ? basePath : ""}${action.href}`}
+                      href={`${action.href.startsWith("/") ? basePath : ""}${action.href}`}
                       target={action.external ? "_blank" : undefined}
                       rel={action.external ? "noopener noreferrer" : undefined}
                       download={action.download}
-                      aria-label={action.ariaLabel}
+                      aria-label={actionAriaLabel}
                       onClick={() => onAction(action)}
                       key={action.id}
                     >
@@ -277,9 +313,9 @@ export function DetailPanel({
                       ) : (
                         <ArrowUpRight size={16} aria-hidden="true" />
                       )}
-                      {action.label}
+                      {actionLabel}
                       {action.external ? (
-                        <span className="sr-only"> (opens in a new tab)</span>
+                        <span className="sr-only"> ({copy.detail.opensNewTab})</span>
                       ) : null}
                     </a>
                   );

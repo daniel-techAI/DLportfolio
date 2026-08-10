@@ -12,12 +12,13 @@ import {
 } from "@xyflow/react";
 import { motion } from "motion/react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import { portfolioData } from "@/data/portfolio";
+import type { PortfolioLocale, PortfolioUiCopy } from "@/data/localization";
 import { applyGraphLayout } from "@/lib/graph-layout";
 import type {
   GraphDefinition,
   PortfolioAction,
   PortfolioNode as PortfolioNodeModel,
+  PortfolioSiteData,
 } from "@/types/portfolio";
 import {
   PortfolioNode,
@@ -32,6 +33,9 @@ export type PortfolioCanvasHandle = {
 
 type PortfolioCanvasProps = {
   graph: GraphDefinition;
+  siteData: PortfolioSiteData;
+  locale: PortfolioLocale;
+  copy: PortfolioUiCopy;
   selectedNodeId: string | null;
   transitioning: boolean;
   reducedMotion: boolean;
@@ -73,6 +77,9 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
   function PortfolioCanvasInner(
     {
       graph,
+      siteData,
+      locale,
+      copy,
       selectedNodeId,
       transitioning,
       reducedMotion,
@@ -111,7 +118,7 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
 
       return positioned.map((item, index) => {
         const isCenter = item.id === graph.centerNodeId;
-        const childGraph = item.childGraphId ? portfolioData.graphs[item.childGraphId] : undefined;
+        const childGraph = item.childGraphId ? siteData.graphs[item.childGraphId] : undefined;
         const childCount =
           item.childCount ??
           (childGraph
@@ -126,6 +133,10 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
           childCount,
           basePath,
           profileAvailable,
+          identity: siteData.identity,
+          linkedInAction: siteData.actions.linkedin,
+          locale,
+          copy,
           onActivate,
           onAction,
         };
@@ -145,7 +156,18 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
           style: { animationDelay: `${Math.min(index * 32, 220)}ms` },
         } satisfies PortfolioFlowNode;
       });
-    }, [basePath, graph, onAction, onActivate, profileAvailable, selectedNodeId, viewport]);
+    }, [
+      basePath,
+      copy,
+      graph,
+      locale,
+      onAction,
+      onActivate,
+      profileAvailable,
+      selectedNodeId,
+      siteData,
+      viewport,
+    ]);
 
     const edges = useMemo<Edge[]>(
       () =>
@@ -240,7 +262,7 @@ const PortfolioCanvasInner = forwardRef<PortfolioCanvasHandle, PortfolioCanvasPr
           selectionKeyCode={null}
           multiSelectionKeyCode={null}
           onNodeClick={preventWrapperActivation}
-          aria-label={`${graph.title} interactive mind map. Use Tab to move between nodes.`}
+          aria-label={copy.canvas.interactiveMapLabel(graph.title)}
           colorMode="dark"
         >
           <Background

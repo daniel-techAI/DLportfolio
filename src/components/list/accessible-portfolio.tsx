@@ -1,17 +1,33 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { portfolioData } from "@/data/portfolio";
-import type { GraphDefinition, PortfolioAction, PortfolioNode } from "@/types/portfolio";
+import {
+  formatPortfolioProficiency,
+  formatPortfolioStatus,
+  type PortfolioLocale,
+  type PortfolioUiCopy,
+} from "@/data/localization";
+import type {
+  GraphDefinition,
+  PortfolioAction,
+  PortfolioNode,
+  PortfolioSiteData,
+} from "@/types/portfolio";
 import { LinkedInProfileBadge } from "@/components/shared/linkedin-profile-badge";
 
 export function AccessiblePortfolio({
   graph,
+  siteData,
+  locale,
+  copy,
   hidden,
   onActivate,
   onAction,
 }: {
   graph: GraphDefinition;
+  siteData: PortfolioSiteData;
+  locale: PortfolioLocale;
+  copy: PortfolioUiCopy;
   hidden: boolean;
   onActivate: (node: PortfolioNode, origin: HTMLButtonElement) => void;
   onAction: (action: PortfolioAction) => void;
@@ -23,19 +39,20 @@ export function AccessiblePortfolio({
     <section
       id="portfolio-list"
       className="list-view"
-      aria-label={`${graph.title} accessible list view`}
+      aria-label={copy.list.label(graph.title)}
       hidden={hidden}
     >
       <header className="list-view__intro">
-        <p className="graph-node__eyebrow">Text portfolio · {graph.layout} map</p>
+        <p className="graph-node__eyebrow">{copy.list.eyebrow(graph.layout)}</p>
         <h2 className="list-view__title">{center?.title ?? graph.title}</h2>
         <p>{center?.descriptor ?? graph.description}</p>
-        {graph.id === portfolioData.rootGraphId ? (
+        {graph.id === siteData.rootGraphId ? (
           <LinkedInProfileBadge
-            action={portfolioData.actions.linkedin}
-            identity={portfolioData.identity}
+            action={siteData.actions.linkedin}
+            identity={siteData.identity}
             compact
             testId="linkedin-profile-badge-list"
+            networkLabel={copy.linkedinProfile}
             onAction={onAction}
           />
         ) : null}
@@ -48,16 +65,23 @@ export function AccessiblePortfolio({
               <article
                 className="list-card"
                 data-testid={`list-node-${node.id}`}
-                aria-label={`${node.title}, ${node.status ?? "planned"}. Details will be available after completion.`}
+                aria-label={copy.list.unavailableCredential(
+                  node.title,
+                  formatPortfolioStatus(node.status ?? "planned", locale),
+                )}
                 key={node.id}
               >
                 <div className="list-card__body py-6">
                   <span className="list-card__heading">
                     <strong>{node.title}</strong>
-                    <span>{node.descriptor ?? "Work in progress"}</span>
+                    <span>{node.descriptor ?? copy.list.workInProgress}</span>
                   </span>
-                  {node.status ? <span className="status-chip">{node.status}</span> : null}
-                  <p>Verified details will be added after this credential is completed.</p>
+                  {node.status ? (
+                    <span className="status-chip" data-status={node.status.replaceAll(" ", "-")}>
+                      {formatPortfolioStatus(node.status, locale)}
+                    </span>
+                  ) : null}
+                  <p>{copy.list.verifiedAfterCompletion}</p>
                 </div>
               </article>
             ) : (
@@ -65,14 +89,20 @@ export function AccessiblePortfolio({
                 <summary>
                   <span className="list-card__heading">
                     <strong>{node.title}</strong>
-                    <span>{node.descriptor ?? node.kind.replaceAll("-", " ")}</span>
+                    <span>{node.descriptor ?? copy.node.kind[node.kind]}</span>
                   </span>
                   <ChevronDown size={17} aria-hidden="true" />
                 </summary>
                 <div className="list-card__body">
-                  {node.status ? <span className="status-chip">{node.status}</span> : null}
+                  {node.status ? (
+                    <span className="status-chip" data-status={node.status.replaceAll(" ", "-")}>
+                      {formatPortfolioStatus(node.status, locale)}
+                    </span>
+                  ) : null}
                   {node.proficiency ? (
-                    <span className="proficiency-chip">{node.proficiency}</span>
+                    <span className="proficiency-chip">
+                      {formatPortfolioProficiency(node.proficiency, locale)}
+                    </span>
                   ) : null}
                   {node.detail?.description ? <p>{node.detail.description}</p> : null}
                   {node.detail?.sections?.map((section) => (
@@ -96,10 +126,10 @@ export function AccessiblePortfolio({
                     onClick={(event) => onActivate(node, event.currentTarget)}
                   >
                     {node.childGraphId
-                      ? "Open map"
+                      ? copy.list.openMap
                       : node.action
                         ? node.action.label
-                        : "Open details"}
+                        : copy.list.openDetails}
                     <ChevronRight size={15} aria-hidden="true" />
                   </button>
                 </div>
@@ -108,10 +138,8 @@ export function AccessiblePortfolio({
           )
         ) : (
           <div className="list-card__body py-6">
-            <p>{graph.emptyState?.title ?? "No entries yet"}</p>
-            <p>
-              {graph.emptyState?.description ?? "Details will be added as they become available."}
-            </p>
+            <p>{graph.emptyState?.title ?? copy.list.noEntries}</p>
+            <p>{graph.emptyState?.description ?? copy.list.detailsWhenAvailable}</p>
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ type LinkedInProfileBadgeProps = {
   identity: PortfolioIdentity;
   compact?: boolean;
   testId?: string;
+  networkLabel: string;
   onAction?: (action: PortfolioAction) => void;
 };
 
@@ -17,6 +18,7 @@ export function LinkedInProfileBadge({
   identity,
   compact = false,
   testId = "linkedin-profile-badge",
+  networkLabel,
   onAction,
 }: LinkedInProfileBadgeProps) {
   if (action.availability !== "available" || !action.href) return null;
@@ -40,7 +42,7 @@ export function LinkedInProfileBadge({
         in
       </span>
       <span className="linkedin-profile-badge__copy">
-        <span className="linkedin-profile-badge__network">LinkedIn profile</span>
+        <span className="linkedin-profile-badge__network">{networkLabel}</span>
         <strong>{identity.name}</strong>
         {!compact ? <span>{identity.descriptor}</span> : null}
       </span>

@@ -9,27 +9,32 @@ export const credentialStatuses = ["earned", "in progress", "planned"] as const;
 export type CredentialStatus = (typeof credentialStatuses)[number];
 
 export const verificationTypes = [
-  "formal certification",
-  "verified digital credential",
-  "completion certificate",
-  "learning badge",
-  "course completion",
+  "Professional Certification",
+  "Vendor Certification",
+  "Applied Skills Credential",
+  "GitHub Certification",
+  "Course Completion Certificate",
+  "Learning Badge",
+  "Course Completion",
 ] as const;
 export type VerificationType = (typeof verificationTypes)[number];
 
 export const proficiencyLevels = [
-  "working knowledge",
+  "credential-backed",
+  "applied",
   "practical",
-  "developing",
-  "foundational",
-  "strong",
+  "learning",
+  "project-demonstrated",
 ] as const;
 export type Proficiency = (typeof proficiencyLevels)[number];
 
 export type AnalyticsEventName =
   | "graph_opened"
   | "project_viewed"
+  | "project_link_clicked"
   | "credential_viewed"
+  | "credential_verification_clicked"
+  | "contact_action"
   | "cv_downloaded"
   | "linkedin_clicked"
   | "github_clicked"
@@ -133,6 +138,9 @@ export interface PortfolioAction {
   external?: boolean;
   download?: string;
   analyticsEvent?: AnalyticsEventName;
+  /** Non-sensitive context used to classify a meaningful analytics event. */
+  analyticsContext?: string;
+  analyticsDestination?: "live_site" | "repository" | "certificate" | "verification" | "other";
   ariaLabel?: string;
 }
 
@@ -236,7 +244,11 @@ export interface Credential {
   category: string;
   issueDate: string | null;
   expirationDate: string | null;
+  credentialId: string | null;
   credentialUrl: string | null;
+  certificateUrl: string | null;
+  /** Recipient name exactly as printed by the issuer, when it differs from the portfolio name. */
+  certificateName: string | null;
   certificateImage: PortfolioImage | null;
   status: CredentialStatus;
   description: string;

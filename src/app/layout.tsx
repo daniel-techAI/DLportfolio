@@ -18,6 +18,7 @@ const newsreader = Newsreader({
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com").replace(/\/$/, "");
 const configuredBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/^\/+|\/+$/g, "");
 const publicRoot = `${siteUrl}${configuredBasePath ? `/${configuredBasePath}` : ""}`;
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(`${publicRoot}/`),
@@ -28,11 +29,15 @@ export const metadata: Metadata = {
   creator: portfolioData.identity.name,
   keywords: [
     "Daniel Laky",
+    "business and economics",
+    "AI workflows",
+    "web development",
+    "digital marketing",
+    "analytics",
     "customer support",
     "operations",
     "sales support",
-    "e-commerce",
-    "digital projects",
+    "Google Shopping ads",
     "Slovakia",
     "remote work",
   ],
@@ -45,6 +50,7 @@ export const metadata: Metadata = {
     title: portfolioData.metadata.title,
     description: portfolioData.metadata.description,
     siteName: portfolioData.metadata.siteName,
+    locale: portfolioData.metadata.locale,
     images: [
       {
         url: `${publicRoot}${portfolioData.metadata.socialImage.src}`,
@@ -64,6 +70,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: googleSiteVerification ? { google: googleSiteVerification } : undefined,
 };
 
 export const viewport: Viewport = {

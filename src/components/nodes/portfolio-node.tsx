@@ -4,8 +4,17 @@ import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { ArrowDownToLine, ArrowUpRight, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, type MouseEvent } from "react";
-import { portfolioData } from "@/data/portfolio";
-import type { PortfolioAction, PortfolioNode as PortfolioNodeModel } from "@/types/portfolio";
+import {
+  formatPortfolioProficiency,
+  formatPortfolioStatus,
+  type PortfolioLocale,
+  type PortfolioUiCopy,
+} from "@/data/localization";
+import type {
+  PortfolioAction,
+  PortfolioIdentity,
+  PortfolioNode as PortfolioNodeModel,
+} from "@/types/portfolio";
 import { LinkedInProfileBadge } from "@/components/shared/linkedin-profile-badge";
 import { PortfolioIconGlyph } from "@/components/shared/icon-map";
 
@@ -17,6 +26,10 @@ export type PortfolioFlowNodeData = {
   childCount: number;
   basePath: string;
   profileAvailable: boolean;
+  identity: PortfolioIdentity;
+  linkedInAction: PortfolioAction;
+  locale: PortfolioLocale;
+  copy: PortfolioUiCopy;
   onActivate: (node: PortfolioNodeModel, origin: HTMLButtonElement) => void;
   onAction: (action: PortfolioAction) => void;
 };
@@ -25,13 +38,6 @@ export type PortfolioFlowNode = Node<PortfolioFlowNodeData, "portfolio">;
 
 function normalizeStatus(status: string) {
   return status.replaceAll(" ", "-");
-}
-
-function statusLabel(status: string) {
-  if (status === "in progress") return "Currently studying";
-  if (status === "active development") return "Active development";
-  if (status === "early-stage product development") return "Early stage";
-  return status;
 }
 
 export function PortfolioNode({
@@ -47,6 +53,10 @@ export function PortfolioNode({
     childCount,
     basePath,
     profileAvailable,
+    identity,
+    linkedInAction,
+    locale,
+    copy,
     onActivate,
     onAction,
   } = data;
@@ -55,7 +65,7 @@ export function PortfolioNode({
   const isAction = Boolean(item.action);
   const hasChildGraph = Boolean(item.childGraphId);
   const isInactiveCredential = item.kind === "credential" && item.status !== "earned";
-  const profileImage = portfolioData.identity.profileImage;
+  const profileImage = identity.profileImage;
   const profileSrc = `${basePath}${profileImage.src}`;
 
   const classNames = [
@@ -64,6 +74,7 @@ export function PortfolioNode({
     isProfile && "graph-node--profile",
     item.kind === "project" && "graph-node--project",
     (item.kind === "credential" || item.kind === "credential-category") && "graph-node--credential",
+    item.kind === "credential" && item.featured && "graph-node--featured",
     item.kind === "timeline" && "graph-node--timeline",
   ]
     .filter(Boolean)
@@ -73,14 +84,17 @@ export function PortfolioNode({
     onActivate(item, event.currentTarget);
   };
 
-  const actionSuffix = item.action?.kind === "download" ? "Download" : "Open";
+  const actionSuffix = item.action?.kind === "download" ? copy.node.download : copy.node.open;
   const ariaLabel = isInactiveCredential
-    ? `${item.title}, ${statusLabel(item.status ?? "planned")}. Details will be available after completion.`
+    ? copy.node.inactiveCredential(
+        item.title,
+        formatPortfolioStatus(item.status ?? "planned", locale),
+      )
     : hasChildGraph
-      ? `Open ${item.title} map${childCount ? `, ${childCount} items` : ""}`
+      ? copy.node.openMap(item.title, childCount)
       : isAction
-        ? `${actionSuffix} ${item.title}`
-        : `View details for ${item.title}`;
+        ? (item.action?.ariaLabel ?? copy.node.runAction(actionSuffix, item.title))
+        : copy.node.viewDetails(item.title);
 
   return (
     <motion.article
@@ -118,7 +132,7 @@ export function PortfolioNode({
             <PortfolioIconGlyph name={item.icon} size={17} strokeWidth={1.65} />
           </span>
           <span className="graph-node__eyebrow">
-            {isCenter ? "Current map" : (item.meta?.category ?? item.kind.replaceAll("-", " "))}
+            {isCenter ? copy.node.currentMap : (item.meta?.category ?? copy.node.kind[item.kind])}
           </span>
         </span>
 
@@ -145,7 +159,7 @@ export function PortfolioNode({
           ) : null}
           {isProfile ? (
             <span className="graph-node__descriptor">
-              {portfolioData.identity.location} · {portfolioData.identity.status}
+              {identity.location} · {identity.status}
             </span>
           ) : null}
         </span>
@@ -154,13 +168,17 @@ export function PortfolioNode({
           <span className="flex flex-wrap items-center gap-1.5">
             {item.status ? (
               <span className="status-chip" data-status={normalizeStatus(item.status)}>
-                {statusLabel(item.status)}
+                {formatPortfolioStatus(item.status, locale)}
               </span>
             ) : null}
-            {item.proficiency ? <span className="proficiency-chip">{item.proficiency}</span> : null}
+            {item.proficiency ? (
+              <span className="proficiency-chip">
+                {formatPortfolioProficiency(item.proficiency, locale)}
+              </span>
+            ) : null}
             {childCount > 0 ? (
               <span className="graph-node__count">
-                {childCount} {childCount === 1 ? "item" : "items"}
+                {childCount} {childCount === 1 ? copy.node.item : copy.node.items}
               </span>
             ) : null}
           </span>
@@ -179,8 +197,9 @@ export function PortfolioNode({
       </motion.button>
       {isProfile && isCenter ? (
         <LinkedInProfileBadge
-          action={portfolioData.actions.linkedin}
-          identity={portfolioData.identity}
+          action={linkedInAction}
+          identity={identity}
+          networkLabel={copy.linkedinProfile}
           onAction={onAction}
         />
       ) : null}

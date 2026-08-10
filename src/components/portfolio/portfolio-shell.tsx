@@ -2,6 +2,13 @@
 
 import { AnimatePresence, MotionConfig, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  defaultPortfolioLocale,
+  getPortfolioUiCopy,
+  localizePortfolioData,
+  resolvePortfolioLocale,
+  type PortfolioLocale,
+} from "@/data/localization";
 import { portfolioData } from "@/data/portfolio";
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -24,6 +31,7 @@ import { ClientErrorBoundary } from "@/components/shared/client-error-boundary";
 const HISTORY_INDEX_KEY = "__danielPortfolioIndex";
 const HISTORY_PATH_KEY = "__danielPortfolioPath";
 const LIST_PREFERENCE_KEY = "daniel-portfolio-view";
+const LOCALE_PREFERENCE_KEY = "daniel-portfolio-locale";
 
 type HistoryMarker = {
   [HISTORY_INDEX_KEY]?: number;
@@ -58,23 +66,60 @@ export function PortfolioShell({
   const transitionTokenRef = useRef(0);
   const historyIndexRef = useRef(0);
   const historyEntriesRef = useRef(new Map<number, string[]>([[0, []]]));
+  const localeInitializedRef = useRef(false);
   const [path, setPath] = useState<string[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
-  const [detailNode, setDetailNode] = useState<PortfolioNode | null>(null);
+  const [detailNodeId, setDetailNodeId] = useState<string | null>(null);
   const [listView, setListView] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [locale, setLocale] = useState<PortfolioLocale>(defaultPortfolioLocale);
+
+  const localizedData = useMemo(() => localizePortfolioData(portfolioData, locale), [locale]);
+  const copy = useMemo(() => getPortfolioUiCopy(locale), [locale]);
 
   const resolution = useMemo(
-    () => validateGraphPath(path, portfolioData.graphs, portfolioData.rootGraphId),
-    [path],
+    () => validateGraphPath(path, localizedData.graphs, localizedData.rootGraphId),
+    [localizedData, path],
   );
   const graph = resolution.graph;
   const breadcrumbs = useMemo(
-    () => buildGraphBreadcrumbs(path, portfolioData.graphs, portfolioData.rootGraphId),
-    [path],
+    () => buildGraphBreadcrumbs(path, localizedData.graphs, localizedData.rootGraphId),
+    [localizedData, path],
+  );
+  const detailNode = useMemo(
+    () =>
+      detailNodeId
+        ? (Object.values(localizedData.graphs)
+            .flatMap((candidate) => candidate.nodes)
+            .find((node) => node.id === detailNodeId) ?? null)
+        : null,
+    [detailNodeId, localizedData.graphs],
   );
   const canGoBack = path.length > 0;
+
+  useEffect(() => {
+    if (!localeInitializedRef.current) {
+      const storedLocale = resolvePortfolioLocale(
+        window.localStorage.getItem(LOCALE_PREFERENCE_KEY),
+      );
+      if (storedLocale !== locale) {
+        const frame = window.requestAnimationFrame(() => {
+          localeInitializedRef.current = true;
+          setLocale(storedLocale);
+        });
+        return () => window.cancelAnimationFrame(frame);
+      }
+      localeInitializedRef.current = true;
+    }
+
+    document.documentElement.lang = locale;
+    window.localStorage.setItem(LOCALE_PREFERENCE_KEY, locale);
+    document.title = localizedData.metadata.title;
+    document
+      .querySelector<HTMLMetaElement>('meta[name="description"]')
+      ?.setAttribute("content", localizedData.metadata.description);
+  }, [locale, localizedData.metadata.description, localizedData.metadata.title]);
 
   const announceGraph = useCallback((nextPath: readonly string[], graphId: string) => {
     trackEvent("graph_opened", {
@@ -143,7 +188,7 @@ export function PortfolioShell({
       const normalizedPath = next.valid ? [...next.path] : [];
       const graphId = next.valid ? next.graphId : portfolioData.rootGraphId;
       const token = ++transitionTokenRef.current;
-      setDetailNode(null);
+      setDetailNodeId(null);
       setTransitioning(true);
 
       if (mode === "push") pushHistory(normalizedPath);
@@ -191,7 +236,7 @@ export function PortfolioShell({
 
       historyIndexRef.current = nextIndex;
       historyEntriesRef.current.set(nextIndex, normalized);
-      setDetailNode(null);
+      setDetailNodeId(null);
       setSelectedNodeId(null);
       setTransitioning(true);
       setPath(normalized);
@@ -238,6 +283,37 @@ export function PortfolioShell({
       case "email_clicked":
         trackEvent("email_clicked", { source: "portfolio" });
         break;
+      case "project_link_clicked":
+        trackEvent("project_link_clicked", {
+          projectId: action.analyticsContext ?? action.id,
+          destination:
+            action.analyticsDestination === "live_site" ||
+            action.analyticsDestination === "repository"
+              ? action.analyticsDestination
+              : "other",
+        });
+        break;
+      case "credential_verification_clicked": {
+        const credentialId = action.analyticsContext ?? action.id;
+        const issuer = portfolioData.credentials.find(
+          (credential) => credential.id === credentialId,
+        )?.issuer;
+        trackEvent("credential_verification_clicked", { credentialId, issuer });
+        break;
+      }
+      case "contact_action":
+        trackEvent("contact_action", {
+          method:
+            action.kind === "phone"
+              ? "phone"
+              : action.id === "linkedin"
+                ? "linkedin"
+                : action.id === "github"
+                  ? "github"
+                  : "email",
+          source: "portfolio",
+        });
+        break;
       default:
         break;
     }
@@ -279,7 +355,7 @@ export function PortfolioShell({
   const openDetails = useCallback((node: PortfolioNode, origin: HTMLButtonElement) => {
     if (node.kind === "credential" && node.status !== "earned") return;
     originRef.current = origin;
-    setDetailNode(node);
+    setDetailNodeId(node.id);
     if (node.kind === "project") {
       trackEvent("project_viewed", { projectId: node.id });
     }
@@ -289,7 +365,7 @@ export function PortfolioShell({
   }, []);
 
   const closeDetails = useCallback(() => {
-    setDetailNode(null);
+    setDetailNodeId(null);
     window.requestAnimationFrame(() => {
       if (originRef.current?.isConnected) originRef.current.focus({ preventScroll: true });
     });
@@ -350,24 +426,24 @@ export function PortfolioShell({
         trackAction(action);
         return;
       }
-      const cvNode = Object.values(portfolioData.graphs)
+      const cvNode = Object.values(localizedData.graphs)
         .flatMap((candidate) => candidate.nodes)
         .find((node) => node.action?.id === action.id);
       if (cvNode) {
         originRef.current = document.querySelector<HTMLButtonElement>(`[data-testid='${testId}']`);
-        setDetailNode(cvNode);
+        setDetailNodeId(cvNode.id);
       }
     },
-    [trackAction],
+    [localizedData.graphs, trackAction],
   );
 
   const openEnglishCv = useCallback(() => {
-    openCv(portfolioData.actions.cv, cvAvailable, "cv-download");
-  }, [cvAvailable, openCv]);
+    openCv(localizedData.actions.cv, cvAvailable, "cv-download");
+  }, [cvAvailable, localizedData.actions.cv, openCv]);
 
   const openSlovakCv = useCallback(() => {
-    openCv(portfolioData.actions.cvSlovak, cvSlovakAvailable, "cv-download-slovak");
-  }, [cvSlovakAvailable, openCv]);
+    openCv(localizedData.actions.cvSlovak, cvSlovakAvailable, "cv-download-slovak");
+  }, [cvSlovakAvailable, localizedData.actions.cvSlovak, openCv]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -396,15 +472,15 @@ export function PortfolioShell({
   }, [closeDetails, detailNode, helpOpen, navigateBack, navigateHome, path.length]);
 
   const currentCenter = graph.nodes.find((node) => node.id === graph.centerNodeId);
-  const cvHref = portfolioData.actions.cv.href ?? "/documents/Daniel_Laky_Remote_Roles_CV.pdf";
+  const cvHref = localizedData.actions.cv.href ?? "/documents/Daniel_Laky_Remote_Roles_CV.pdf";
   const cvSlovakHref =
-    portfolioData.actions.cvSlovak.href ?? "/documents/Daniel_Laky_CV_Slovak.pdf";
+    localizedData.actions.cvSlovak.href ?? "/documents/Daniel_Laky_CV_Slovak.pdf";
 
   return (
     <MotionConfig reducedMotion="user">
       <main className="portfolio-app" data-testid="portfolio-root">
         <a className="skip-link" href="#portfolio-list" onClick={() => setListView(true)}>
-          Skip to text portfolio
+          {copy.shell.skipToTextPortfolio}
         </a>
         <BackgroundAtmosphere />
 
@@ -413,14 +489,14 @@ export function PortfolioShell({
             className="brand-mark"
             type="button"
             onClick={navigateHome}
-            aria-label="Return to Daniel Laky root map"
+            aria-label={copy.shell.rootMapLabel}
           >
             <span className="brand-mark__glyph" aria-hidden="true">
               DL
             </span>
             <span className="brand-mark__label">
-              <strong>Daniel Laky</strong>
-              <span>Professional identity map</span>
+              <strong>{localizedData.identity.name}</strong>
+              <span>{copy.shell.professionalIdentityMap}</span>
             </span>
           </button>
           <CanvasControls
@@ -431,17 +507,21 @@ export function PortfolioShell({
             basePath={basePath}
             cvHref={cvHref}
             cvSlovakHref={cvSlovakHref}
+            locale={locale}
+            copy={copy}
             onBack={navigateBack}
             onHome={navigateHome}
             onToggleList={toggleListView}
             onHelp={() => setHelpOpen(true)}
             onCv={openEnglishCv}
             onCvSlovak={openSlovakCv}
+            onLocaleChange={setLocale}
           />
         </header>
 
         <Breadcrumbs
           items={breadcrumbs.map((item) => ({ ...item, path: [...item.path] }))}
+          label={copy.breadcrumbs.label}
           onNavigate={(nextPath) => void navigateToPath(nextPath)}
         />
 
@@ -450,6 +530,9 @@ export function PortfolioShell({
             fallback={
               <AccessiblePortfolio
                 graph={graph}
+                siteData={localizedData}
+                locale={locale}
+                copy={copy}
                 hidden={false}
                 onActivate={activateNode}
                 onAction={trackAction}
@@ -459,6 +542,9 @@ export function PortfolioShell({
             <PortfolioCanvas
               ref={canvasRef}
               graph={graph}
+              siteData={localizedData}
+              locale={locale}
+              copy={copy}
               selectedNodeId={selectedNodeId}
               transitioning={transitioning}
               reducedMotion={reducedMotion}
@@ -472,22 +558,24 @@ export function PortfolioShell({
 
         <AccessiblePortfolio
           graph={graph}
+          siteData={localizedData}
+          locale={locale}
+          copy={copy}
           hidden={!listView}
           onActivate={activateNode}
           onAction={trackAction}
         />
 
         <div className="canvas-footer" aria-hidden={listView}>
-          <p className="canvas-caption">
-            Drag to pan · Select a node to move deeper · View fits automatically
-          </p>
+          <p className="canvas-caption">{copy.shell.canvasInstructions}</p>
           <p className="canvas-caption text-right">
-            {currentCenter?.title ?? graph.title} · {graph.nodes.length - 1} connected items
+            {currentCenter?.title ?? graph.title} · {graph.nodes.length - 1}{" "}
+            {graph.nodes.length - 1 === 1 ? copy.shell.connectedItem : copy.shell.connectedItems}
           </p>
         </div>
 
         <p className="sr-only" role="status" aria-live="polite">
-          Current portfolio map: {graph.title}
+          {copy.shell.currentMapAnnouncement}: {graph.title}
         </p>
 
         <AnimatePresence>
@@ -497,12 +585,14 @@ export function PortfolioShell({
               basePath={basePath}
               cvAvailable={cvAvailable}
               cvSlovakAvailable={cvSlovakAvailable}
+              locale={locale}
+              copy={copy}
               onClose={closeDetails}
               onAction={trackAction}
             />
           ) : null}
         </AnimatePresence>
-        <KeyboardHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+        <KeyboardHelpDialog open={helpOpen} copy={copy.help} onClose={() => setHelpOpen(false)} />
       </main>
     </MotionConfig>
   );

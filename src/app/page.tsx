@@ -23,6 +23,9 @@ export default function Home() {
     "href" in portfolioData.actions.github ? portfolioData.actions.github.href : undefined;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com").replace(/\/$/, "");
   const publicRoot = `${siteUrl}${basePath}`;
+  const completedCredentials = portfolioData.credentials.filter(
+    (credential) => credential.status === "earned",
+  );
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -59,13 +62,32 @@ export default function Home() {
       },
     ],
     knowsAbout: [
-      "Customer support",
+      "Business and economics",
+      "Practical AI workflows",
+      "Web development and deployment",
+      "Digital marketing and analytics",
       "Operations",
       "Sales support",
-      "E-commerce",
-      "Digital project coordination",
-      "AI-assisted workflows",
+      "Project coordination",
+      "Google Shopping ads concepts",
     ],
+    hasCredential: completedCredentials.map((credential) => ({
+      "@type": "EducationalOccupationalCredential",
+      name: credential.title,
+      credentialCategory: credential.verificationType,
+      recognizedBy: {
+        "@type": "Organization",
+        name: credential.issuer,
+      },
+      dateCreated: credential.issueDate,
+      ...(credential.expirationDate ? { expires: credential.expirationDate } : {}),
+      ...(credential.credentialId ? { identifier: credential.credentialId } : {}),
+      ...(credential.credentialUrl
+        ? { url: credential.credentialUrl }
+        : credential.certificateUrl
+          ? { url: `${publicRoot}${credential.certificateUrl}` }
+          : {}),
+    })),
   };
 
   return (
